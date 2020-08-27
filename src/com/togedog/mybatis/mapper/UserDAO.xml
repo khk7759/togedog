@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.togedog.model.IUserDAO">
+	
+	<!-- 회원 로그인 -->
+	<select id="loginUser" parameterType="com.togedog.vo.UserDTO" statementType="CALLABLE">
+	   { 
+	      CALL PRC_USER_LOGIN(
+	         #{id},
+	         #{pwd},
+	         #{code, mode=OUT, jdbcType=VARCHAR},
+	         #{userType, mode=OUT, jdbcType=VARCHAR},
+	         #{name, mode=OUT, jdbcType=VARCHAR},
+	         #{stoped, mode=OUT, jdbcType=VARCHAR},
+	         #{bye, mode=OUT, jdbcType=VARCHAR},
+	         #{grade, mode=OUT, jdbcType=VARCHAR}
+	      )
+	   }
+	</select>
+	
+	<!-- 관리자 로그인 -->
+	<select id="loginAdmin" parameterType="com.togedog.vo.UserDTO" statementType="CALLABLE">
+	   { CALL PRC_ADMIN_LOGIN(
+	         #{id},
+	         #{pwd},
+	         #{code, mode=OUT, jdbcType=VARCHAR},
+	         #{name, mode=OUT, jdbcType=VARCHAR},
+	         #{userType, mode=OUT, jdbcType=VARCHAR}
+	      )
+	   }
+	</select>
+	
+
+	<!-- 견주 회원가입 -->
+	<select id="ownAdd" parameterType="com.togedog.vo.UserDTO" resultType="java.lang.String" statementType="CALLABLE">
+		{CALL PRC_OWN_INSERT(
+					#{id, jdbcType=VARCHAR }, 
+					#{userTypeCd, jdbcType=VARCHAR },
+					#{addrCd3, jdbcType=VARCHAR },
+					#{addrDetail, jdbcType=VARCHAR },
+					#{bankCd, jdbcType=VARCHAR },
+					#{accNum, jdbcType=VARCHAR },
+					#{genderCd, jdbcType=VARCHAR },
+					#{email, jdbcType=VARCHAR },
+					#{pwd, jdbcType=VARCHAR },
+					#{name, jdbcType=VARCHAR },
+					#{birthday, jdbcType=DATE },
+					#{tel, jdbcType=VARCHAR },
+					#{photo, jdbcType=VARCHAR },
+					#{intrCd, jdbcType=VARCHAR },
+					#{intrDetail, jdbcType=VARCHAR },
+					#{nickName, jdbcType=VARCHAR },
+					#{dayCd, jdbcType=VARCHAR },
+					#{favStart, jdbcType=INTEGER },
+					#{favEnd, jdbcType=INTEGER },
+					#{result, mode=OUT, jdbcType=VARCHAR} 
+			)	
+		}
+	</select>
+
+	<!-- 추가 견주가입 -->
+	<select id="addown" parameterType="com.togedog.vo.UserDTO" resultType="java.lang.String" statementType="CALLABLE">
+	{CALL PRC_ADD_OWN(
+				#{code},
+				#{intrCd, jdbcType=VARCHAR },
+				#{intrDetail, jdbcType=VARCHAR },
+				#{nickName, jdbcType=VARCHAR },
+				#{dayCd, jdbcType=VARCHAR },
+				#{favStart },
+				#{favEnd },
+				#{result, mode=OUT, jdbcType=VARCHAR} 
+		)
+	}
+	</select>
+	
+	<!-- 워커 신청 -->
+	<select id="wokAdd" parameterType="com.togedog.vo.UserDTO" resultType="java.lang.String" statementType="CALLABLE">
+		{CALL PRC_WOK_INSERT(
+					#{id, jdbcType=VARCHAR }, 
+					#{userTypeCd, jdbcType=VARCHAR },
+					#{addrCd3, jdbcType=VARCHAR },
+					#{addrDetail, jdbcType=VARCHAR },
+					#{bankCd, jdbcType=VARCHAR },
+					#{accNum, jdbcType=VARCHAR },
+					#{genderCd, jdbcType=VARCHAR },
+					#{email, jdbcType=VARCHAR },
+					#{pwd, jdbcType=VARCHAR },
+					#{name, jdbcType=VARCHAR },
+					#{birthday , jdbcType=VARCHAR},
+					#{tel, jdbcType=VARCHAR},
+					#{jobCd, jdbcType=VARCHAR },
+					#{nurtureExp, jdbcType=VARCHAR },
+					#{careerName, jdbcType=VARCHAR },
+					#{msg, jdbcType=VARCHAR },
+					#{question1, jdbcType=VARCHAR },
+					#{question2, jdbcType=VARCHAR },
+					#{photo, jdbcType=VARCHAR },
+					#{result, mode=OUT, jdbcType=VARCHAR} 
+			)	
+		}
+	</select>
+	
+	<!-- 추가 워커 신청 -->
+	<select id="addwok" parameterType="com.togedog.vo.UserDTO" resultType="java.lang.String" statementType="CALLABLE">
+		{CALL PRC_ADD_WOK(
+			#{code},
+			#{jobCd, jdbcType=VARCHAR},
+			#{nurtureExp, jdbcType=VARCHAR},
+			#{careerName, jdbcType=VARCHAR},
+			#{msg, jdbcType=VARCHAR},
+			#{question1, jdbcType=VARCHAR },
+			#{question2, jdbcType=VARCHAR },
+			#{result, mode=OUT, jdbcType=VARCHAR} 
+			)
+		}
+	</select>
+	
+	<!-- 워커신청 폼 직업 리스트 -->
+	<select id="getjobList" resultType="com.togedog.vo.JobDTO">
+		SELECT JOB_ITEM_CD AS JOBCD, ITEM AS JOBITEM
+		FROM TBL_JOB_ITEM
+	</select>
+	
+	<!-- 워커신청 폼 자격증 리스트 -->
+	<select id="getCrtList" resultType="com.togedog.vo.CrtDTO">
+		SELECT CRT_ITEM_CD AS CRTCD, ITEM AS CRTITEM
+		FROM TBL_CRT_ITEM
+	</select>
+	
+	
+	<!-- 워커 자격증 등록 -->
+	<insert id="crtAdd" parameterType="com.togedog.vo.UserDTO" >
+		INSERT INTO TBL_WOK_LCS(WOK_LCS_CD, WOK_APPLY_CD, CRT_ITEM_CD, INS_DATE) 
+		VALUES('WL'||SEQ_WL.NEXTVAL, #{wokCd}, #{crtCd}, SYSDATE)
+	</insert>
+	
+	<!-- 워커 근무가능 요일 등록 -->
+	<insert id="addWorkDay" parameterType="com.togedog.vo.UserDTO">
+		INSERT INTO TBL_WOK_PSB_DAY(WOK_PSB_DAY_CD, DAY_ITEM_CD, WOK_APPLY_CD, START_TIME, END_TIME)
+		VALUES('WPD'||SEQ_WPD.NEXTVAL, #{dayCd}, #{wokCd}, #{favStart}, #{favEnd} )
+	</insert>
+	
+	<!-- 회원코드로 견주 닉네임 찾기 -->
+	<select id="getUserNickName" resultType="java.lang.String">
+		SELECT NICKNAME AS nickName
+		FROM TBL_OWN
+		WHERE USER_CD = #{code}
+	</select>
+	
+	<!-- 회원코드로 워커 닉네임 찾기 -->
+	<select id="getWorkerName" resultType="java.lang.String">
+		SELECT NAME AS name
+		FROM TBL_USER_DATA
+		WHERE USER_CD = #{code}
+	</select>
+	
+	
+	<!-- 닉네임으로 회원코드 찾기 -->
+	<select id="getUserCd" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT USER_CD AS userCd
+		FROM TBL_OWN
+		WHERE NICKNAME = #{nickName }
+	</select>
+	
+	
+	<!-- 번호 중복체크 -->
+	<select id="telCheck" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM TBL_USER_DATA
+		WHERE TEL = #{tel}
+	</select>
+	
+	<!-- 아이디 중복체크  -->
+	<select id="idCheck" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT COUNT(*) 
+		FROM TBL_USER_DATA
+		WHERE ID = #{id}
+	</select>
+	
+	<!-- 닉네임 중복체크 -->
+	<select id="nickCheck" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM TBL_OWN
+		WHERE NICKNAME = #{nickName}
+	</select>
+	
+	<!-- 관심사 리스트 -->
+	<select id="getIntrList" resultType="com.togedog.vo.UserDTO">
+		SELECT INTR_ITEM_CD AS INTRCD, ITEM AS INTR
+		FROM TBL_INTR_ITEM
+	</select>
+	<!-- 은행 리스트 -->
+	<select id="getBankList" resultType="com.togedog.vo.UserDTO">
+		SELECT BANK_ITEM_CD AS BANKCD , ITEM AS BANK
+		FROM TBL_BANK_ITEM 
+	</select>
+	
+	<!-- 요일 리스트 --><!-- 0808 추가 -->
+	<select id="getDays" resultType="com.togedog.vo.UserDTO">
+		SELECT DAY_ITEM_CD AS dayCd, ITEM AS day
+		FROM TBL_DAY_ITEM
+	</select>
+	
+	<!-- 주소 시도 리스트 -->
+	<select id="getSdList" resultType="com.togedog.vo.UserDTO">
+		SELECT ADDR_S_D_CD AS addrCd1 , ITEM AS addr1
+		FROM TBL_ADDR_S_D
+	</select>
+	
+	<!-- 선택한 시도에 맞는 주소 시군구 리스트 --><!-- 0725 수정 -->
+	<select id="getSggList" parameterType="java.lang.String" resultType="com.togedog.vo.UserDTO">
+		SELECT ADDR_S_G_G_CD AS addrCd2 , ITEM AS addr2
+		FROM TBL_ADDR_S_G_G
+		WHERE ADDR_S_D_CD = #{addrCd1 }
+	</select>
+	
+	<!-- 선택한 시군구에 맞는 주소 동읍면 리스트 --><!-- 0725 수정 -->
+	<select id="getDemList" parameterType="java.lang.String" resultType="com.togedog.vo.UserDTO">
+		SELECT ADDR_D_E_M_CD AS addrCd3 , ITEM AS addr3
+		FROM TBL_ADDR_D_E_M
+		WHERE ADDR_S_G_G_CD = #{addrCd2 }
+	</select>
+	
+	<!-- 유저 아이디 모를 때 아이디 찾기 0724 추가-->
+	<select id="findUserId" resultType="java.lang.String" parameterType="com.togedog.vo.UserDTO">
+		SELECT ID AS id
+		FROM TBL_USER_DATA
+		WHERE NAME = #{name} AND TEL = #{tel} 
+	</select>
+	
+	<!-- 유저 비밀번호 모를 때 비밀번호 찾기 0724 추가 -->
+	<select id="findUserPwd" resultType="java.lang.String" parameterType="com.togedog.vo.UserDTO">
+		SELECT PW AS pwd
+		FROM TBL_USER_DATA
+		WHERE ID = #{id} AND NAME = #{name} AND TEL = #{tel}
+	</select>
+	
+	<!-- 유저 비밀번호 찾으면 업데이트 하기 0724 추가-->
+	<update id="modifyPwd">
+		UPDATE TBL_USER_DATA
+		SET PW = CRYPTPACK.ENCRYPT(#{pwd}, #{pwd})
+		WHERE ID = #{id} AND NAME = #{name} AND TEL = #{tel}
+	</update>
+	
+	<!-- 특정 유저코드의 견주 정보 얻기 -->
+	<select id="getOwnInfo" resultType="com.togedog.vo.UserDTO" parameterType="java.lang.String">
+	 	SELECT USERCODE AS code
+	 	, OWNERCODE AS ownCd
+	 	, PHOTO AS photo
+	 	, ID AS id 
+	 	, NAME AS name 
+	 	, NICKNAME AS nickName
+	 	, BIRTHDAY AS birthday
+	 	, GENDER AS gender
+	 	, PHONE AS tel
+	 	, EMAIL AS email
+	 	, ADDR1 AS addr1
+	 	, ADDR2 AS addr2
+	 	, ADDR3 AS addr3
+	 	, ADDRCD1 AS addrCd1
+	 	, ADDRCD2 AS addrCd2
+	 	, ADDRCD3 AS addrCd3
+	 	, ADDR_DETAIL As addrDetail
+	 	, FEEDBACK_COUNT AS fdbCount
+	 	, REVIEW AS rate
+	 	, POINT AS point
+	 	, GRADE AS grade
+	 	, INTEREST AS intr
+	 	, INTEREST_DETAIL AS intrDetail
+	 	, BANK AS bank
+	 	, BANKCD As bankCd
+	 	, ACCOUNT_NUMBER AS accNum
+	 	, FAVORITE_DAY AS day
+	 	, MINIMUM_TIME AS favStart
+	 	, MAXIMUM_TIME AS favEnd
+	 	, CHECKLIST AS checkList
+	 	FROM VIEW_OWN_INFO
+	 	WHERE USERCODE = #{code}
+	</select>
+	
+	<!-- 특정 유저코드의 유저 타입 업데이트 -->
+	<update id="updateUserType" parameterType="java.lang.String">
+		UPDATE TBL_USER_DATA
+		SET USER_TYPE_CD = 'UT3'
+		WHERE USER_CD = #{userCd}
+	</update>
+	
+	<!-- 포인트 추가 -->
+	<select id="insertPoint" parameterType="com.togedog.vo.UserDTO" statementType="CALLABLE">
+		{CALL PRC_INSERT_POINT(
+				#{ownCd},
+				#{pointItemCd}
+			)
+		}
+	</select>
+	
+	<!-- 아이디로 견주코드 찾기 -->
+	<select id="getOwnCd" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT OWN_CD 
+		FROM TBL_OWN OWN, TBL_USER_DATA DATA
+		WHERE OWN.USER_CD = DATA.USER_CD(+)
+		AND ID = #{id }
+	</select>
+	
+	<!-- 견주 체크리스트 업데이트 -->
+	<update id="updateCheckList" parameterType="com.togedog.vo.UserDTO">
+		UPDATE TBL_OWN
+		SET CHECKLIST = #{checkList}
+		WHERE USER_CD = #{code}
+	</update>
+	
+	<!-- 워커 체크리스트 업데이트  -->
+	<update id="updateWokCheckList" parameterType="com.togedog.vo.UserDTO">
+		UPDATE TBL_WOK
+		SET CHECKLIST = #{checkList}
+		WHERE WOK_APPLY_CD = #{wokApplyCd}
+	</update>
+	
+	<!-- 워커 체크리스트 찾기  -->
+	<select id="getCheckList" resultType="java.lang.String">
+		SELECT CHECKLIST
+		FROM TBL_WOK
+		WHERE WOK_APPLY_CD = #{wokApplyCd} 
+	</select>
+	
+	<!-- 워커 신청코드 찾기 -->
+	<select id="getWokApplyCd" resultType="java.lang.String" >
+		SELECT WOK_APPLY_CD AS wokApplyCd
+		FROM TBL_WOK_APPLY
+		WHERE USER_CD = #{code}
+	</select>
+	
+	<!-- 워커 코드 찾기 -->
+	<select id="getWokCd" resultType="java.lang.String">
+		SELECT WOK_CD AS wokCd
+		FROM TBL_WOK
+		WHERE WOK_APPLY_CD = #{wokApplyCd}
+	</select>
+	
+	<!-- 워커 정보 -->
+	<select id="getWokInfo" resultType="com.togedog.vo.UserDTO">
+		SELECT USERCODE AS userCd
+		, WORKERCODE AS wokCd
+		, ID AS id 
+		, NAME AS name
+		, BIRTHDAY AS birthday
+		, GENDER AS gender
+		, GENDER_CD AS genderCD
+		, TELEPHONE AS tel
+		, EMAIL AS email
+		, ADDR1 AS addr1
+		, ADDR1CD AS addrCd1
+		, ADDR2 AS addr2
+		, ADDR2CD AS addrCd2
+		, ADDR3 AS addr3
+		, ADDR3CD AS addrCd3
+		, DETAIL_ADDR AS addrDetail
+		, AGENCY_COUNT AS agcCount
+		, FDB_COUNT AS fdbCount
+		, FDB_SCORE_AVG AS rate
+		, BANK AS bank
+		, ACCOUNT_NUM AS accNum
+		, JOB AS job
+		, NURTURE_EXP AS nurtureExp
+		, CAREER AS careerName
+		, MSG AS msg
+		FROM VIEW_WOK_INFO
+		WHERE USERCODE = #{code}
+	</select>
+	
+
+	
+	
+	
+</mapper>
+
+	

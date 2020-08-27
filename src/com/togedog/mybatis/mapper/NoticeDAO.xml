@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.togedog.model.INoticeDAO">
+	
+	<select id="mainNoticeList" resultType="com.togedog.vo.NoticeDTO">
+		<![CDATA[
+		SELECT NOTICE_CD AS notiCd2, TITLE AS title, TO_CHAR(INS_DATE, 'YYYY-MM-DD') AS insDate
+		FROM
+		(
+		    SELECT *
+		    FROM TBL_NOTICE
+		    ORDER BY INS_DATE DESC
+		)
+		WHERE ROWNUM <= 5
+		]]>
+	</select>
+	
+	<!-- 페이징 추가 20200807 -->
+	<!-- 공지사항 게시글 최근 날짜로 정렬 -->
+	<select id="noticeList" resultType="com.togedog.vo.NoticeDTO">
+		SELECT *
+		FROM
+		(
+			SELECT ROWNUM AS rNum, T2.*
+			FROM
+			(
+			 SELECT ROWNUM AS notiCd1, T1.*
+			 FROM 
+			    (
+			     SELECT NOTICE_CD AS notiCd2
+			        , ADMIN_CD AS adminCd
+			        , TITLE AS title
+			        , CONTENT AS content
+			        , VIEWS AS views
+			        , TO_CHAR(INS_DATE, 'YYYY-MM-DD') AS insDate
+			     FROM TBL_NOTICE
+			     <choose>
+			     	<when test="searchValue != null">
+			     WHERE TITLE like '%${searchValue}%'
+			     	OR CONTENT like '%${searchValue}%'
+			     ORDER BY INS_DATE ASC
+			    )T1
+			    ORDER BY notiCd1 DESC
+			)T2
+		)T3
+		WHERE T3.rNum<![CDATA[>]]>=${start} AND T3.rNum<![CDATA[<]]>=${end}
+					</when>
+					<otherwise>
+			     ORDER BY INS_DATE ASC
+			    )T1
+			    ORDER BY notiCd1 DESC
+			)T2
+		)T3
+		WHERE T3.rNum<![CDATA[>]]>=${start} AND T3.rNum<![CDATA[<]]>=${end}
+				</otherwise>
+			</choose>
+		ORDER BY T3.rNum ASC
+	</select>
+
+	<!-- 게시물 리스트 중 하나를 클릭했을 때, 해당 게시글이 나타나게 하는 쿼리 0727 추가 -->
+	<select id="noticeArticle" resultType="com.togedog.vo.NoticeDTO" parameterType="java.lang.String">
+		SELECT TITLE AS title
+			, TO_CHAR(INS_DATE, 'YYYY-MM-DD') AS insDate
+			, VIEWS AS views
+			, CONTENT AS content
+		FROM TBL_NOTICE
+		WHERE NOTICE_CD = #{notiCd2 } 
+	</select>
+
+	<!-- 게시글을 클릭해서 나타났을 때 조회수가 1씩 늘어나는 쿼리 0727 추가 -->
+	<update id="viewCount">
+		UPDATE TBL_NOTICE
+		SET VIEWS = VIEWS + 1
+		WHERE NOTICE_CD = #{notiCd2 } 
+	</update>
+	
+	<!-- 게시물 상세보기 안에서 다음 게시물 번호를 얻어오는 함수 (0727 추가) -->
+	<select id="getNextNum" resultType="java.lang.Integer" parameterType="java.lang.String">
+		<![CDATA[
+		SELECT NVL(MIN(TO_NUMBER(SUBSTR(NOTICE_CD, 5))), -1)
+		FROM TBL_NOTICE
+		WHERE TO_NUMBER(SUBSTR(NOTICE_CD, 5)) > TO_NUMBER(SUBSTR(#{notiCd2 }, 5))
+		]]>
+	</select>
+	
+	<!-- 게시물 상세보기 안에서 이전 게시물 제목을 얻어오는 함수 (0727 추가) -->
+	<select id="getBeforeNum" resultType="java.lang.Integer" parameterType="java.lang.String">
+	
+		<![CDATA[
+		SELECT NVL(MAX(TO_NUMBER(SUBSTR(NOTICE_CD, 5))), -1)
+		FROM TBL_NOTICE
+		WHERE TO_NUMBER(SUBSTR(NOTICE_CD, 5)) < TO_NUMBER(SUBSTR(#{notiCd2 }, 5))
+		]]>
+	</select>
+	
+	<!-- 페이징 처리 및 검색하기 -->
+	<!-- 게시물 카운트하기 -->
+	<select id="getTotalNum" resultType="java.lang.Integer" parameterType="java.lang.String">
+		SELECT COUNT(*)
+		FROM TBL_NOTICE
+		<if test="searchValue!=null and !searchValue.equals('')">
+		WHERE TITLE like '%${searchValue}%'
+		OR CONTENT like '%${searchValue}%'
+		</if>
+	</select>
+</mapper>

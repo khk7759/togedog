@@ -1,0 +1,472 @@
+<%@ page contentType="text/html; charset=UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%
+	request.setCharacterEncoding("UTF-8");
+	String cp = request.getContextPath();
+%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Togedog</title>
+<!-- 파비콘 적용 -->
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="icon" href="favicon.png">
+<link rel="stylesheet" type="text/css" href="css/MiaryTemplate.css">
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="css/Modal.css">
+<script src="http://code.jquery.com/jquery.min.js"></script>
+<script type="text/javascript" src="js/bootstrap.min.js"></script>
+<script type="text/javascript">
+
+	$(document).ready(function()
+	{
+		$("#ownertab").click(function() 
+		{
+			location.href="<%=cp%>/ownermiarymain.action";	
+		});
+		
+		$("#workertab").click(function() 
+		{
+			// 세션에 들어간 유저코드가 누구인지 jstl 로 알아냄 그리고 usercd 에 담는다.
+			var usercd = "<c:out value='${sessionScope.user.getUserType()}' />";
+			
+			//alert(usercd);
+			
+			// 유저코드가 견주이면
+			if(usercd == "견주")
+			{
+				// 이렇게 띄워주고
+				if(confirm("워커가 되시면 워커 마이어리를 이용하실 수 있습니다." + "\n" + "확인 버튼을 누르시면 워커 지원 페이지로 전환됩니다!") == true)
+				{
+					location.href="<%=cp%>/mainworkerrec.action";
+				}
+				else
+				{
+					return;
+				}
+			}
+			else // 그렇지 않으면 ... (견주겸워커인경우는 워커마이어리로 가게된다.)
+			{
+				location.href="<%=cp%>/workermiarymain.action";
+			}
+			
+		});
+		
+		// 닉네임 클릭하면 상세정보 볼 수 있음
+		$("a").filter(".detail").click(function()
+		{	
+			//견주아이디 = $(this).val();
+			$("#modal").show();
+		});
+		
+		
+	});
+	
+	function closeModal()
+	{
+		$('.searchModal').hide();
+	};
+
+
+</script>
+
+
+<style type="text/css">
+
+	div .nav-btns
+	{
+		padding: 0px 0px 0px 0%;
+		margin: 20px 0px 5px 0px;
+	}
+	
+	
+	.nav-tabs
+	{
+		padding: 0px 0px 0px 0px;
+		margin: 10px 10px 0px 20px;
+	
+	}
+	
+	th, td
+	{
+		text-align: center;                               
+	}
+	
+	
+	/* css 파일 안먹어서 중복으로 작성 */
+	.container
+	{
+		padding: 0px 0px 0px 0px;
+		border-radius: 0px 0px 0px 0px;
+	}
+	
+	/* 너비 맞춤 */
+	.content-wrap
+	{	
+		width :100%;
+		margin : 0px 0px 0px 0px;
+		padding: 0px 0px 0px 0px;
+		border-radius: 0px 0px 0px 0px;
+		background-color: var(--blue);
+	}
+	
+	.menus
+	{
+		margin: 30px 0px 0px 0px;
+		padding: 0px 0px 0px 0px;
+	}
+	
+	.txt
+	{
+		margin: 10px 0px 0px 70px;
+		padding: 0px 0px 0px 0px;
+		font-size: 18px;
+		font-weight: bold;
+		text-align: left;
+	}
+	
+	
+	
+	/* 메뉴탭(메인, 기록...) 효과 정리 */
+	  
+	.flex-column > li > a:hover,
+	.flex-column > li > a:focus 
+	{
+		text-decoration: none;
+		background-color: #fff;
+		border-radius: 0 10px 10px 0;
+	}
+	
+	 .nav-tabs > li > a 
+	{
+		margin-right: 0px;
+		line-height: 1.42857143;
+		border: 1px solid transparent;
+		border-radius: 10px 10px 0 0;
+	} 
+
+	/* 추가 200726 */
+	.nav-item:hover
+	{
+		background-color: #FFFFFF;
+		cursor: pointer;
+	}
+</style>
+
+</head>
+<body>
+    <c:import url="Header.jsp"></c:import>
+    
+		<!-- 전체 감싸는 container -->
+		<div class="container col-md-12">
+		
+
+			<!-- 견주/워커 탭과 content 와 nav-bar 를 감싸는 content-wrap -->
+			<div class="content-wrap col-md-12">
+
+		
+				<!-- 견주/워커 탭 -->
+				<div class="tabbable" id="tabs-460097">
+					<ul class="nav nav-tabs" style="border-bottom: none;">
+						<li class="nav-item">
+							<a class="nav-link" id="ownertab" data-toggle="tab">견주</a>
+						</li>
+						<li class="nav-item" style="background-color: #E8E8E8;">
+							<a class="nav-link" id="workertab" data-toggle="tab">워커</a>
+						</li>
+					</ul>
+				</div>
+				
+				<!-- main 감싸는 content -->
+				<div class="content col-md-11">
+				
+					<!-- 메인 영역 -->
+					<div class="main col-md-12">
+						<!-- 마이 정보 / 마이펫 정보 / 소셜 탭 -->
+						<div class="tabbable col-md-12" id="tabs-460097">
+							<ul class="nav nav-tabs" style="border-bottom: none;">
+								<li class="nav-item col-md-4">
+		                           <a class="nav-link" href="<%=cp %>/ownerfriendlist.action">소셜</a>
+		                        </li>
+								<li class="nav-item col-md-4">
+									<a class="nav-link" href="<%=cp %>/ownerinfotab.action">마이 정보</a>
+								</li>
+		                        <li class="nav-item col-md-4">
+		                           <a class="nav-link" href="<%=cp %>/ownerpetinfo.action">마이펫 정보</a>
+		                        </li>
+							</ul>
+						</div>
+						<div class="col-md-1"></div>
+						<div class="col-md-12" >
+							<div class="col-md-12"> 
+								<!-- 친구/가족/차단 버튼  --> 
+								<div style="margin: 10px 0px 10px 10px; padding:0px;"class="pull-center">
+									<button type="button" class="btn btn-default btn-xs"
+									onclick="location.href='ownerfriendlist.action'">소셜목록</button>
+									<button type="button" class="btn btn-default btn-xs"
+									onclick="location.href='ownerfriendapply.action'">신청목록</button>
+									<button type="button" class="btn btn-default btn-xs"
+									onclick="location.href='ownerblocklist.action'">차단목록</button>
+								</div>	
+							</div>
+							
+							<div class="col-md-12">
+								<!-- 펫 공유 리스트 -->
+								<div class="txt"><span><img src="images/FOOT.png" alt="🐾" style="width: 30px; margin-right: 10px;"/>펫 공유 리스트</span>
+								</div>
+								<div style=" width: 90%; margin: 20px 5% 0% 5%;">
+								<table class="table table-hover table-condensed">
+									<tr>
+										<th style="text-align: center;">번호</th>
+										<th style="text-align: center;">닉네임</th>
+										<th style="text-align: center;">공유반려견 이름</th>
+										<th style="text-align: center;">견종</th>
+										<th style="text-align: center;">성별</th>
+										<th style="text-align: center;">생년월일</th>
+										<th style="text-align: center;">공유일자</th>
+										<th style="text-align: center;">버튼
+											<span class="tooltip_event glyphicon glyphicon-question-sign" id="preFeedback"
+												style="margin-left: 5px;" 
+												data-toggle="tooltip" data-placement="right"
+												 title="공유해제 시 연동된 기록이 모두 사라집니다??">
+											</span>
+										</th>									
+									</tr>
+									<tr>
+										<td>2</td>
+										<td>으하하</td>
+										<td>모리</td>
+										<td>허스키</td>
+										<td>남</td>
+										<td>2018.07.05</td>
+										<td>2020.07.01</td>
+										<td>
+											<button type="button" class="btn btn-default btn-xs">공유해제</button>
+										</td>
+									</tr>
+									<tr>
+										<td>1</td>
+										<td>으하하</td>
+										<td>땡구</td>
+										<td>사모예드</td>
+										<td>남</td>
+										<td>2018.05.05</td>
+										<td>2020.07.01</td>
+										<td>
+											<button type="button" class="btn btn-default btn-xs">공유해제</button>
+										</td>
+									</tr>
+							</table>
+						</div><!-- end 펫공유리스트 -->
+						
+						<!-- 친구리스트 -->
+						<div class="txt"><span><img src="images/FOOT.png" alt="🐾" style="width: 30px; margin-right: 10px;"/>친구리스트</span></div>
+						<div style=" width: 90%; margin: 20px 5% 0% 5%;">
+							<table class="toYouList table table-hover table-condensed">
+								<tr>
+									<th style="text-align: center;">번호</th>
+									<th style="text-align: center;">상세보기</th>
+									<th style="text-align: center;">지역</th>
+									<th style="text-align: center;">닉네임</th>
+									<th style="text-align: center;">대표반려견</th>
+									<th style="text-align: center;">견종</th>
+									<th style="text-align: center;">등록날짜</th>
+									<th style="text-align: center;">버튼</th>									
+								</tr>
+								<tr>
+									<td>3</td>
+									<td><a class="detail">상세정보보기</a></td>
+									<td>서울</td>
+									<td>아하하</td>
+									<td>땡구</td>
+									<td>말티즈</td>
+									<td>2020.05.05</td>
+									<td>
+										<button type="button" class="btn btn-default btn-xs">쪽지</button>
+										<button type="button" class="btn btn-default btn-xs">산책신청</button>
+										<button type="button" class="btn btn-default btn-xs">친구해제</button>
+									</td>
+								</tr>
+								<tr>
+									<td>2</td>
+									<td><a class="detail">상세정보보기</a></td>
+									<td>서울</td>
+									<td>아하하</td>
+									<td>땡구</td>
+									<td>말티즈</td>
+									<td>2020.05.05</td>
+									<td>
+										<button type="button" class="btn btn-default btn-xs">쪽지</button>
+										<button type="button" class="btn btn-default btn-xs">산책신청</button>
+										<button type="button" class="btn btn-default btn-xs">친구해제</button>
+									</td>
+								</tr>
+								<tr>
+									<td>1</td>
+									<td><a class="detail">상세정보보기</a></td>
+									<td>서울</td>
+									<td>아하하</td>
+									<td>땡구</td>
+									<td>말티즈</td>
+									<td>2020.05.05</td>
+									<td>
+										<button type="button" class="btn btn-default btn-xs">쪽지</button>
+										<button type="button" class="btn btn-default btn-xs">산책신청</button>
+										<button type="button" class="btn btn-default btn-xs">친구해제</button>
+									</td>
+								</tr>
+							</table>
+						</div>	<!-- 친구리스트 -->
+						
+						<!-- 차단리스트 -->
+						<!-- 
+						<div class="txt"><span><img>(발바닥)차단리스트</span></div>
+						<div style=" width: 90%; margin: 20px 5% 0% 5%;">
+							<table class="table table-hover table-condensed">
+								<tr>
+									<th>닉네임</th>
+									<th>차단일자</th>
+									<th>버튼</th>
+								</tr>
+								<tr>
+									<td>으악</td>
+									<td>2020.07.14</td>
+									<td>
+										<button type="button" class="btn btn-default btn-xs">차단해제</button>
+									</td>
+								</tr>
+							</table>
+						</div>end 차단리스트 
+						 -->
+					</div>
+							
+							
+						</div>
+					
+					</div><!-- end main -->
+						
+				</div><!-- end content  -->
+					
+				<!-- 탭들 감싸는 nav-bar -->
+				<div class="nav-bar col-md-1"  style="margin-top: 15px; padding-left: 0px;">
+					<ul class="nav flex-column">
+						<li class="nav-item"><a class="nav-link" href="<%=cp %>/ownermiarymain.action">메 인</a></li>
+						<li class="nav-item"><a class="nav-link" href="<%=cp %>/ownerwalkmatching.action">매 칭</a></li>
+						<li class="nav-item"><a class="nav-link" href="<%=cp %>/ownerrecordlisttab.action">기 록</a></li>
+						<li class="nav-item"><a class="nav-link" href="<%=cp %>/ownergrouptab.action">그 룹</a></li>
+						<li class="nav-item"><a class="nav-link" href="<%=cp %>/ownerstatisticstab.action">통 계</a></li>
+						<li class="nav-item" style="background-color: #FFFFFF;"><a class="nav-link active" href="<%=cp %>/ownerfriendlist.action">정 보</a></li>
+					</ul>
+				</div><!--  end nav_bar -->
+			</div><!-- end content-wrap  -->
+
+		</div><!-- end container -->
+		
+		
+		<!-- 상세정보 모달창 -->
+		<!-- 친구 정보 상세 보기 -->
+		<div id="modal" class="searchModal">
+			<div class="search-modal-content">
+				<div class="page-header">
+					<h3 style="font-weight: bold;">상세정보</h3>
+				</div>
+				
+				<div class="row">
+					<div class="col-sm-12">
+					
+					<div style="text-align: left; font-size: 17px; font-weight:bold;
+					  margin: 0px 0px 10px 10px;">친구 정보</div>
+					
+						<table class="table table-hover table-condensed">
+							<tr>
+								<th style="text-align: center;">번호</th>
+								<th style="text-align: center;">사진</th>
+								<th style="text-align: center;">지역</th>
+								<th style="text-align: center;">닉네임</th>
+								<th style="text-align: center;">나이</th>
+								<th style="text-align: center;">성별</th>
+								<th style="text-align: center;">관심사</th>
+								<th style="text-align: center;">선호 산책시간</th>
+								<th style="text-align: center;">등록날짜</th>
+							</tr>
+							<tr>
+								<td>1</td>
+								<td>사진</td>
+								<td>서울</td>
+								<td>으하하</td>
+								<td>20</td>
+								<td>여</td>
+								<td>프로그래밍</td>
+								<td>12:00 ~ 18:30</td>
+								<td>2020.06.05</td>
+							</tr>
+						</table>
+						
+						<div style="text-align: left; font-size: 17px; font-weight:bold;
+						  margin: 0px 0px 10px 10px;">강아지 정보</div>
+					
+						<table class="table table-hover table-condensed">
+							<tr>
+								<th style="text-align: center;">번호</th>
+								<th style="text-align: center;">사진</th>
+								<th style="text-align: center;">칭호</th>
+								<th style="text-align: center;">이름</th>
+								<th style="text-align: center;">생년월일</th>
+								<th style="text-align: center;">성별/중성화여부</th>
+								<th style="text-align: center;">견종</th>
+								<th style="text-align: center;">몸무게</th>
+							</tr>
+							<tr>
+								<td>1</td>
+								<td>사진</td>
+								<td>특출난 똑똑이</td>
+								<td>
+									<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-award" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+									  <path fill-rule="evenodd" d="M9.669.864L8 0 6.331.864l-1.858.282-.842 1.68-1.337 1.32L2.6 6l-.306 1.854 1.337 1.32.842 1.68 1.858.282L8 12l1.669-.864 1.858-.282.842-1.68 1.337-1.32L13.4 6l.306-1.854-1.337-1.32-.842-1.68L9.669.864zm1.196 1.193l-1.51-.229L8 1.126l-1.355.702-1.51.229-.684 1.365-1.086 1.072L3.614 6l-.25 1.506 1.087 1.072.684 1.365 1.51.229L8 10.874l1.356-.702 1.509-.229.684-1.365 1.086-1.072L12.387 6l.248-1.506-1.086-1.072-.684-1.365z"/>
+									  <path d="M4 11.794V16l4-1 4 1v-4.206l-2.018.306L8 13.126 6.018 12.1 4 11.794z"/>
+									</svg>
+									미미
+								</td>
+								<td>2017.05.08</td>
+								<td>여/Y</td>
+								<td>말티즈</td>
+								<td>6.3kg</td>
+							</tr>
+							<tr>
+								<td>2</td>
+								<td>사진</td>
+								<td>서투른 골목대장</td>
+								<td>마루</td>
+								<td>2018.09.08</td>
+								<td>여/Y</td>
+								<td>말티즈</td>
+								<td>5.8kg</td>
+							</tr>
+						</table>
+						
+						<br>
+						<button type="button" class="btn btn-default btn-xs">쪽지</button>
+						<button type="button" class="btn btn-default btn-xs">산책신청</button>
+						<button type="button" class="btn btn-default btn-xs">친구해제</button>
+					</div>
+				</div>
+				
+				<hr>
+				<div
+					style="cursor: pointer; background-color: #DDDDDD; text-align: center; padding-bottom: 10px; padding-top: 10px;"
+					onClick="closeModal();">
+					<span class="pop_bt modalCloseBtn" style="font-size: 11pt;">
+					닫기</span>
+				</div>
+			</div>
+			
+		</div><!-- end modal 친구리스트 -->
+		
+		
+		
+		
+	<c:import url="Footer.jsp"></c:import>
+		
+</body>
+</html>

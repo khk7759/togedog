@@ -1,0 +1,768 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.togedog.model.IMiaryDAO">
+	
+	<!-- 견주 정보 가져오기 -->
+	<select id="getOwnInfo" resultType="com.togedog.vo.UserDTO">
+		SELECT PHOTO as photo
+			 , USERCODE as code
+			 , ID as id
+			 , Name as name
+			 , NICKNAME as nickName
+			 , GENDER as gender
+			 , BIRTHDAY as birthday
+			 , PHONE as tel
+			 , EMAIL as email
+			 , ADDR1 as addr1
+			 , ADDR2 as addr2
+			 , ADDR3 as addr3
+			 , ADDRCD1 as addrCd1
+			 , ADDRCD2 as addrCd2
+			 , ADDRCD3 as addrCd3
+			 , ADDR_DETAIL as addrDetail
+			 , REVIEW as rate
+			 , POINT as point
+			 , GRADE as grade
+		FROM VIEW_OWN_INFO
+		WHERE USERCODE = #{code}
+	</select>
+	
+	<!-- 견주 정보 가져오기 -->
+	<select id="getOwnCode" resultType="string">
+		SELECT OWN_CD as ownCd
+		FROM TBL_OWN
+		WHERE USER_CD = #{code}
+	</select>
+	
+	<!-- 주소 시군구 리스트 -->
+	<select id="getSggList" resultType="com.togedog.vo.UserDTO">
+		SELECT ADDR_S_D_CD AS addrCd2 , ITEM AS addr2
+		FROM TBL_ADDR_S_G_G
+		WHERE ADDR_S_D_CD = #{addrCd1}
+	</select>
+	
+	<!-- 주소 동읍면 리스트 -->
+	<select id="getDemList" resultType="com.togedog.vo.UserDTO">
+		SELECT ADDR_S_D_CD AS addrCd3 , ITEM AS addr3
+		FROM TBL_ADDR_D_E_M
+		WHERE ADDR_S_D_CD = #{addrCd2}
+	</select>
+	
+	<!-- 알림 개수 -->
+	<select id="notiCount" resultType="int">
+		SELECT COUNT(*)
+		FROM VIEW_NOTI
+		WHERE USER_CD = #{code} AND OPEN_DATE IS NULL
+	</select>
+	
+	<!-- 알림 -->
+	<!-- 
+	<select id="notilist" resultType="com.togedog.vo.UserDTO">
+		SELECT NOTI_CD as notiCd
+			 , INS_DATE as insDate
+			 , OPEN_DATE as openDate
+		FROM VIEW_NOTI
+		WHERE USER_CD = #{code}
+	</select>
+	-->
+	
+	<!-- 쪽지 개수 -->
+	<select id="noteCount" resultType="int">
+		SELECT COUNT(*)
+		FROM VIEW_R_NOTE_LIST
+		WHERE RECEIVER = #{code}
+	</select>
+	
+	<!-- 쪽지리스트 0811 추가 -->
+	<select id="getNoteList" parameterType="java.lang.String" resultType="com.togedog.vo.NoteDTO">
+		SELECT NOTE_CD as noteCd
+			 , SENDER  as userCd
+			 , RECEIVER as userCd2
+			 , CONTENT as content
+			 , S_DEL_DATE as sDelDate
+			 , R_DEL_DATE as rDelDate
+			 , OPEN_DATE as openDate
+			 , INS_DATE as insDate
+			 , NICKNAME as nickName
+			 , SUBSTR(CONTENT,1,40) as title
+		FROM VIEW_R_NOTE_LIST
+		WHERE RECEIVER = #{code}
+		ORDER BY INS_DATE DESC
+	</select>
+	
+	<!-- 쪽지보내기  -->
+	<insert id="sendNote" parameterType="com.togedog.vo.NoteDTO">
+		INSERT INTO TBL_NOTE(NOTE_CD, USER_CD, USER_CD2, CONTENT)
+		VALUES('NOTE'||SEQ_NOTE.NEXTVAL, #{userCd}, #{userCd2}, #{content})
+	</insert>
+	
+	<!-- 받은 쪽지 삭제 -->
+	<update id="deleteNote" parameterType="java.lang.String">
+		UPDATE TBL_NOTE
+		SET R_DEL_DATE = SYSDATE
+		WHERE NOTE_CD = #{noteCd}
+	</update>
+	
+	<!-- 쪽지 보기 -->
+	<select id="getNote" parameterType="java.lang.String" resultType="com.togedog.vo.NoteDTO">
+		SELECT NICKNAME AS nickName, CONTENT AS content
+		FROM VIEW_R_NOTE_LIST
+		WHERE NOTE_CD = #{noteCd}
+	</select>
+	
+	
+	
+	<!-- 산책신청 내역 → 받은 산책 신청 -->
+	<select id="walkReceive" resultType="com.togedog.vo.MatchingDTO">
+		SELECT ROWNUM as rowN
+             , FUNC_WALK_RECEIVE_LAST_CD(DWALK) AS walkCd2
+			 , WALK_CD as walkCd
+			 , NICKNAME as nickName
+			 , AGE as age
+			 , TYPE as gender
+			 , WALK_DATE as walkDate
+			 , START_TIME as startTime
+			 , END_TIME as endTime
+			 , ADDR as addrDetail
+			 , PET_NAME as petName
+			 , DOG_ITEM as dogType
+			 , PET_GENDER as petGender
+			 , INS_DATE as insDate
+		FROM VIEW_WALK_RECEIVE_INFO
+        WHERE ME = #{ownCd}
+          AND FUNC_WALK_RECEIVE_LAST_CD(DWALK) = -1
+		ORDER BY ROWN DESC
+	</select>
+	
+	<!-- 산책신청 내역 → 받은 산책 신청 상세내역 견주 -->
+	<select id="walkReceiveDetailOwn" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT WALK_CD as walkCd
+			 , OWN_CD as ownCd
+			 , PHOTO as photo
+			 , NICKNAME as nickName
+			 , AGE as age
+			 , TYPE as gender
+			 , ITEM as intr
+     		 , INTR_DETAIL as intrDetail
+			 , OWN_AVG as fdbAvg
+			 , PETCOUNT as petCount
+			 , RECENT_WALK_DATE as lastWalk
+			 , INS_DATE as insDate
+		FROM VIEW_WALK_RECEIVE_DETAIL_OWN
+		WHERE WALK_CD = #{walkCd}
+	</select>
+	
+	<!-- 산책신청 내역 → 받은 산책 신청 상세내역 펫 -->
+	<select id="walkReceiveDetailPet" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT WALK_CD as walkCd
+			 , PET_CD as petCd
+			 , PHOTO as photo
+			 , GD as goodDog
+			 , MDHEAD as mdHead
+			 , MDBODY as mdBody
+			 , PETNAME as petName
+			 , NAME as dogItem
+			 , BIRTH as petBirthday
+			 , GENDER as petGender
+			 , NEUTRAL as neutralDate
+			 , PET_SIZE as petSize
+		FROM VIEW_WALK_RECEIVE_DETAIL_PET
+		WHERE WALK_CD = #{walkCd}
+	</select>
+	
+	<!-- 산책신청 내역 → 받은 산책 신청 상세내역 이전 피드백 -->
+	<select id="walkReceiveDetailOwnFdb" resultType="com.togedog.vo.MatchingDTO">
+		SELECT FI.ITEM as itemName
+		     , FDB.SCORE as itemScore
+		FROM TBL_OWN_FDB FDB JOIN TBL_OWN_FDB_ITEM FI
+		ON FDB.OWN_FDB_ITEM_CD = FI.OWN_FDB_ITEM_CD
+		JOIN TBL_WALK_LAST WL
+		ON FDB.WALK_LAST_CD = WL.WALK_LAST_CD
+		WHERE OWN_CD2 = ( SELECT W.OWN_CD
+		                  FROM TBL_WALK W JOIN TBL_OWN O
+		                  ON W.OWN_CD = O.OWN_CD
+		                  WHERE WALK_CD = #{walkCd})
+		                    AND OWN_CD = #{ownCd}
+		  AND FDB.INS_DATE = ( SELECT MAX(INS_DATE)
+		                       FROM TBL_OWN_FDB
+		                       WHERE OWN_CD2 = ( SELECT W.OWN_CD
+		                                         FROM TBL_WALK W JOIN TBL_OWN O
+		                                         ON W.OWN_CD = O.OWN_CD
+		                                         WHERE WALK_CD = #{walkCd}) 
+		                         AND OWN_CD = #{ownCd})
+	</select>
+	
+	
+	
+	<!-- 산책신청 내역 → 보낸 산책 신청 -->
+	<select id="walkSend" resultType="com.togedog.vo.MatchingDTO">
+		SELECT ROWNUM as rowN
+			 , WALK_CD as walkCd
+			 , OWN_CD as ownCd
+			 , NICKNAME as nickName
+			 , AGE as age
+			 , TYPE as gender
+			 , WALK_DATE as walkDate
+			 , START_TIME as startTime
+			 , END_TIME as endTime
+			 , ADDR as addrDetail
+			 , PET_NAME as petName
+			 , NAME as dogType
+			 , PET_GENDER as petGender
+			 , INS_DATE as insDate
+		FROM VIEW_WALK_SEND_INFO
+		WHERE ME = #{ownCd}
+		ORDER BY ROWNUM DESC
+	</select>
+	
+	<!-- 산책신청 내역 → 보낸 산책 신청 상세내역 견주 -->
+	<select id="walkSendDetailOwn" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT WALK_CD as walkCd
+			 , OWN_CD as ownCd
+			 , PHOTO as photo
+			 , NICKNAME as nickName
+			 , AGE as age
+			 , TYPE as gender
+			 , INTR as intr
+     		 , INTRDETAIL as intrDetail
+			 , OWN_AVG as fdbAvg
+			 , PETCOUNT as petCount
+			 , RECENT_WALK_DATE as lastWalk
+			 , INS_DATE as insDate
+		FROM VIEW_WALK_SEND_DETAIL_OWN
+		WHERE WALK_CD = #{walkCd}
+		  AND ME = #{ownCd}
+	</select>
+	
+	
+	
+	<!-- 견주 산책매칭 최종내역 리스트 0728 추가-->
+	<select resultType="com.togedog.vo.MatchingDTO" id="getLastWalkInfo" parameterType="java.lang.String">
+		<![CDATA[ 
+			SELECT ROWNUM AS rowN
+				 , WALKLASTCD 
+				 , WALKCD2
+				 , OWNCD2
+				 , WALKCD
+				 , OWNCD
+				 , ADDR1CD
+				 , ADDR1
+				 , ADDR2CD
+				 , ADDR2
+				 , ADDR3CD
+				 , ADDR3
+				 , ADDRDETAIL
+				 , WALKDATE
+				 , STARTTIME
+				 , ENDTIME
+				 , NICKNAME
+				 , AGE
+				 , PHOTO
+				 , GENDER
+				 , INTR
+				 , INTRDETAIL
+				 , FUNC_GET_USER_CD(OWNCD) AS USERCD1
+				 , FUNC_GET_USER_CD(OWNCD2) AS USERCD2
+				 , (CASE WHEN TO_DATE(WALKDATE,'YYYY-MM-DD') >= SYSDATE THEN '산책대기' 
+	       		   WHEN TRUNC(SYSDATE - TO_DATE(WALKDATE,'YYYY-MM-DD')) > 0  AND TRUNC(SYSDATE - TO_DATE(WALKDATE,'YYYY-MM-DD')) <=7 AND FUN_WALK_FDB_COUNT(WALKLASTCD, OWNCD2) IS NULL THEN '피드백하기'
+	       		   WHEN TRUNC(SYSDATE - TO_DATE(WALKDATE,'YYYY-MM-DD')) >=7 AND FUN_WALK_FDB_COUNT(WALKLASTCD, OWNCD2) IS NOT NULL THEN '산책완료' 
+	       		   ELSE '산책대기' END ) AS STATUS
+			FROM
+			(   
+			    SELECT * 
+			    FROM VIEW_WALK_LAST_FIR
+			    WHERE OWNCD = FUNC_GET_OWN_CD(#{userCd})
+			      
+			    UNION 
+			   
+			    SELECT *
+			    FROM VIEW_WALK_LAST_SEC
+			    WHERE OWNCD2 = FUNC_GET_OWN_CD(#{userCd})
+			)
+			ORDER BY ROWNUM DESC
+		]]>
+	</select>
+	
+	<!-- 견주 산책매칭 최종내역 견주 상세정보  0729 추가-->
+	<select id="getWalkLastOwnDetail" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT WALKLASTCD AS walkLastCd 
+	    , WALKCD2 AS walkCd2 
+	    , OWNCD2 AS ownCd2 
+	    , WALKCD AS walkCd 
+	    , OWNCD AS ownCd1  
+	    , WALKDATE  AS walkDate
+	    , STARTTIME AS startTime 
+	    , ENDTIME AS endTime  
+	    , NICKNAME AS nickName
+	    , AGE AS age 
+	    , NVL(PHOTO, 'none') AS photo
+	    , GENDER AS gender
+	    , INTR AS intr  
+	    , INTRDETAIL AS intrDetail
+	    , PETCOUNT AS petCount
+		FROM
+		(
+		    SELECT *
+		    FROM VIEW_WALK_LAST_DETAIL_OWN_SEC
+		    WHERE OWNCD2 = FUNC_GET_OWN_CD(#{userCd})
+		    AND WALKLASTCD = #{walkLastCd }
+		    
+		    UNION
+		    
+		    SELECT *
+		    FROM VIEW_WALK_LAST_DETAIL_OWN_FIR
+		    WHERE OWNCD = FUNC_GET_OWN_CD(#{userCd})
+		     AND WALKLASTCD = #{walkLastCd }
+		)
+	</select>
+	
+	<!-- 최종매칭리스트 상세정보 펫 0729 추가 -->
+	<select id="getWalkLastPetDetail" parameterType="java.lang.String" resultType="com.togedog.vo.PetDTO">
+		SELECT WALK_PET_SEL_CD AS walkPetSel, WALK_CD AS walkCd, PET_CD AS petCd
+			 , PHOTO AS petPhoto, NAME AS petName, BIRTH AS petBirthday, NEUTRAL AS neutralDate
+			 , DOGI_CD AS dogItemCd, DOGI AS dogItem, PET_SIZE AS petSize
+		 	 , MDHEAD AS mdHead, MDBODY AS mdBody, GOODDOG AS goodDog
+		 	 , GENDER AS petGender
+		FROM VIEW_WALK_LAST_PET_DETAIL
+		WHERE WALK_CD = FUNC_GET_OTHER_WALK_CD(#{userCd}, #{walkLastCd}) 
+	</select>
+	
+	<!-- 최종매칭리스트 상세정보 장애 정보 0729 추가 -->
+	<select id="getWalkLastDisaDetail" parameterType="java.lang.String" resultType="com.togedog.vo.PetDTO">
+		SELECT V.PET_CD AS petCd, V.NAME AS petName, D.NAME AS disaName
+		FROM VIEW_WALK_LAST_PET_DETAIL V ,TBL_DISA D
+		WHERE V.PET_CD = D.PET_CD(+)
+		AND WALK_CD = FUNC_GET_OTHER_WALK_CD(#{userCd}, #{walkLastCd})
+	</select>
+	
+	<!-- 최종매칭리스트 상세정보 알러지 정보 0729 추가 -->
+	<select id="getWalkLastAlleDetail" parameterType="java.lang.String" resultType="com.togedog.vo.PetDTO">
+		SELECT V.PET_CD AS petCd, V.NAME AS petName, A.NAME AS allergeName 
+		FROM VIEW_WALK_LAST_PET_DETAIL V, TBL_ALLERGE A 
+		WHERE V.PET_CD = A.PET_CD(+)
+		AND WALK_CD = FUNC_GET_OTHER_WALK_CD(#{userCd}, #{walkLastCd})
+	</select>
+	
+	
+	<!-- 최종매칭리스트 상세정보 이전 매칭 피드백 추가 0729 -->
+	<select id="getBeforeFdbInfo" parameterType="java.lang.String" resultType="com.togedog.vo.FeedbackDTO">
+	SELECT FI.ITEM as ownFdbItem
+	     , FDB.SCORE as ownFdbScore
+	FROM TBL_OWN_FDB FDB JOIN TBL_OWN_FDB_ITEM FI
+	ON FDB.OWN_FDB_ITEM_CD = FI.OWN_FDB_ITEM_CD
+	JOIN TBL_WALK_LAST WL
+	ON FDB.WALK_LAST_CD = WL.WALK_LAST_CD
+	WHERE OWN_CD2 = FUNC_GET_OTHER_OWN_CD(#{userCd},#{walkLastCd}) AND OWN_CD = FUNC_GET_OWN_CD(#{userCd})
+	AND FDB.INS_DATE = (SELECT MAX(INS_DATE)
+	                    FROM TBL_OWN_FDB
+	                    WHERE OWN_CD2 = FUNC_GET_OTHER_OWN_CD(#{userCd},#{walkLastCd}) 
+	                    AND OWN_CD = FUNC_GET_OWN_CD(#{userCd}))
+	</select>
+	
+	
+	
+	<!-- 산책 신청 수락 -->
+	<select id="ownWalkLastInsert" parameterType="com.togedog.vo.MatchingDTO" statementType="CALLABLE">
+		{ CALL PRC_WL_INSERT(#{walkCd}, #{weatherCd} ) }
+	</select>
+	
+	<!-- 산책 신청 거절 -->
+	<delete id="ownWalkLastDelete">
+		DELETE TBL_WALK WHERE WALK_CD = #{walkCd}
+	</delete>
+	
+	<!-- 산책 신청 전송 취소 -->
+	<delete id="ownWalkDelete">
+		DELETE TBL_WALK
+		WHERE WALK_CD2 = #{walkCd}
+		  AND OWN_CD = #{ownCd}
+	</delete>
+	
+	
+	
+	<!-- 대행신청 내역 → 워커 신청 리스트 -->
+	<select id="agcReceive" resultType="com.togedog.vo.MatchingDTO">
+		SELECT ROWNUM as rowN
+			 , AGC_SEL_CD as agcCd
+			 , NAME as petName
+			 , WALK_DATE as walkDate
+			 , START_TIME as startTime
+			 , END_TIME as endTime
+			 , ADDR as addrDetail
+			 , WOK_NAME as name
+			 , AGE as age
+			 , GENDER as gender
+		FROM VIEW_AGC_WOK_INFO
+		WHERE OWN_CD = #{ownCd}
+		ORDER BY ROWNUM DESC
+	</select>
+	
+	<!-- 대행 산책 코드 → 워커 코드 반환 -->
+	<select id="agcToWorker" resultType="java.lang.String">
+		SELECT WOK_CD as wokCd
+		FROM TBL_AGC_SEL
+		WHERE AGC_SEL_CD = #{agcCd}
+	</select>
+	
+	<!-- 대행신청 내역 → 워커 상세정보 -->
+	<select id="agcWorkerDetail" resultType="com.togedog.vo.MatchingDTO">
+		SELECT UD.PHOTO as photo
+		     , UD.NAME as name
+		     , TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) - TO_NUMBER(TO_CHAR(UD.BIRTHDAY, 'YYYY')) + 1 as age
+		     , GT.TYPE as gender
+		     , FUNC_WOK_FDB_AVG(W.WOK_CD) as fdbAvg
+		     , FUNC_WOK_FDB_COUNT(W.WOK_CD) as fdbCount
+		     , TO_CHAR(FUNC_AGC_LAST_DATE(W.WOK_CD), 'YYYY-MM-DD') as lastWalk
+		FROM TBL_WOK W JOIN TBL_WOK_APPLY WL
+		ON W.WOK_APPLY_CD = WL.WOK_APPLY_CD
+		JOIN TBL_USER_DATA UD
+		ON WL.USER_CD = UD.USER_CD
+		JOIN TBL_GENDER_TYPE GT
+		ON UD.GENDER_TYPE_CD = GT.GENDER_TYPE_CD
+		WHERE W.WOK_CD = #{wokCd}
+	</select>
+	
+	<!-- 대행 산책 선택코드 → 대행 코드 -->
+	<select id="agcSelToAgc" resultType="java.lang.String">
+		SELECT AGC_CD as agcCd
+		FROM TBL_AGC_SEL
+		WHERE AGC_SEL_CD = #{agcCd}
+	</select>
+	
+	<!-- 대행신청 내역 → 참여강아지 -->	
+	<select id="agcSelPet" resultType="com.togedog.vo.MatchingDTO">
+		SELECT DT.TYPE as dogType
+			 , MNUI.NAME || ' ' || MNI.NAME as mdHead
+			 , FUNC_GOOD_DOG(P.PET_CD) as goodDog
+		     , P.NAME as petName
+		     , FUN_PET_WEIGHT(P.PET_CD) as weight
+		FROM TBL_AGC_PET_SEL APS JOIN TBL_PET P
+		ON APS.PET_CD = P.PET_CD
+		JOIN TBL_DOG_TYPE DT
+		ON APS.DOG_TYPE_CD = DT.DOG_TYPE_CD
+		LEFT JOIN TBL_MEDAL_GET MG
+		ON P.PET_CD = MG.PET_CD
+		LEFT JOIN TBL_MEDAL_NUM_ITEM MNUI
+		ON MG.MD_NUM_ITEM_CD = MNUI.MD_NUM_ITEM_CD
+		LEFT JOIN TBL_MEDAL_NAME_ITEM MNI
+		ON MG.MD_NAME_ITEM_CD = MNI.MD_NAME_ITEM_CD
+		WHERE (MG.MD_TYPE_CD = 'MT1' OR MG.MD_TYPE_CD IS NULL)
+		  AND AGC_CD = #{agcCd}
+	</select>
+	
+	<!-- 대행신청 내역 → 이전 피드백 내역 -->
+	<select id="agcWokFdb" resultType="com.togedog.vo.MatchingDTO">
+		SELECT WFI.ITEM as itemName
+		     , WF.SCORE as itemScore
+		FROM TBL_WOK_FDB WF JOIN TBL_WOK_FDB_ITEM WFI
+		ON WF.WOK_FDB_ITEM_CD = WFI.WOK_FDB_ITEM_CD
+		JOIN TBL_AGC_LAST AL
+		ON WF.AGC_LAST_CD = AL.AGC_LAST_CD
+		JOIN TBL_AGC_SEL AGS
+		ON AL.AGC_SEL_CD = AGS.AGC_SEL_CD
+		JOIN TBL_AGC A
+		ON AGS.AGC_CD = A.AGC_CD
+		WHERE AGS.WOK_CD = #{wokCd}
+		  AND WF.INS_DATE = (
+		                        SELECT MAX(WF.INS_DATE)
+		                        FROM TBL_WOK_FDB WF JOIN TBL_AGC_LAST AL
+		                        ON WF.AGC_LAST_CD = AL.AGC_LAST_CD
+		                        JOIN TBL_AGC_SEL AGS
+		                        ON AL.AGC_SEL_CD = AGS.AGC_SEL_CD
+		                        JOIN TBL_AGC A
+		                        ON AGS.AGC_CD = A.AGC_CD
+		                        WHERE AGS.WOK_CD = #{wokCd}
+		                          AND A.OWN_CD = #{ownCd}
+		                    )
+	</select>
+	
+	<!-- 대행신청 내역 → 대행 신청 메세지 -->
+	<select id="agcMsg" resultType="java.lang.String">
+		SELECT MSG as msg
+		FROM TBL_AGC_SEL
+		WHERE AGC_SEL_CD = #{agcCd}
+	</select>
+	
+	<!-- 워커 수락 -->
+	<insert id="agcOk">
+		
+	</insert>
+	
+	<!-- 워커 거절 -->
+	<delete id="agcNo">
+		DELETE FROM TBL_AGC_SEL
+		WHERE AGC_SEL_CD = #{agcCd}
+	</delete>
+	
+	
+	<!-- 대행신청 내역 → 대행 신청 리스트 -->
+	<select id="agcApply" resultType="com.togedog.vo.MatchingDTO">
+		SELECT ROWNUM as rowN
+			 , AGC_CD as agcCd
+			 , NAME as petName
+			 , WALK_DATE as walkDate
+			 , START_TIME as startTime
+			 , END_TIME as endTime
+			 , ADDR as addrDetail
+			 , INS_DATE as insDate
+		FROM VIEW_AGC_APPLY_INFO
+		WHERE OWN_CD = #{ownCd}
+		ORDER BY ROWNUM DESC
+	</select>
+	
+	<!-- 대행신청 내역 → 상세정보 -->
+	<select id="agcInfo" resultType="com.togedog.vo.MatchingDTO">
+		SELECT TO_CHAR(A.START_DATE, 'YYYY-MM-DD') as walkDate
+		     , TO_CHAR(A.START_DATE, 'HH24:MI') as startTime
+		     , TO_CHAR(A.END_DATE, 'HH24:MI') as endTime
+		     , ASD.ITEM || ' ' || ASGG.ITEM || ' ' || ADEM.ITEM || ' ' || A.ADDR_DETAIL as addrDetail
+		     , TO_CHAR(A.INS_DATE, 'YYYY-MM-DD') as insDate
+		FROM TBL_AGC A JOIN TBL_ADDR_D_E_M ADEM
+		ON A.ADDR_D_E_M_CD = ADEM.ADDR_D_E_M_CD
+		JOIN TBL_ADDR_S_G_G ASGG
+		ON ADEM.ADDR_S_G_G_CD = ASGG.ADDR_S_G_G_CD
+		JOIN TBL_ADDR_S_D ASD
+		ON ASGG.ADDR_S_D_CD = ASD.ADDR_S_D_CD
+		WHERE A.AGC_CD = #{agcCd}
+	</select>	
+	
+	<!-- 대행신청 취소 → 대행 펫 선택 취소 -->
+	<delete id="agcPetDelete">
+		DELETE FROM TBL_AGC_PET_SEL
+		WHERE AGC_CD = #{agcCd}
+	</delete>
+	
+	<!-- 대행신청 취소 → 매칭 취소 -->
+	<delete id="agcCancel">
+		DELETE FROM TBL_AGC
+		WHERE AGC_CD = #{agcCd}
+	</delete>
+	
+	
+	
+	<!-- 대행매칭 완료 → 매칭 완료 리스트 -->
+	<select id="agcLastList" resultType="com.togedog.vo.MatchingDTO">
+		SELECT ROWNUM as rowN
+			 , AL.AGC_LAST_CD as walkLastCd
+			 , AGS.AGC_SEL_CD as agcCd
+		     , P.NAME petName
+		     , TO_CHAR(A.START_DATE, 'YYYY-MM-DD') as walkDate
+		     , TO_CHAR(A.START_DATE, 'HH24:MI') as startTime
+		     , TO_CHAR(A.END_DATE, 'HH24:MI') as endTime
+		     , UD.NAME as name
+		     , TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) - TO_NUMBER(TO_CHAR(UD.BIRTHDAY, 'YYYY')) + 1 as age
+		     , GT.TYPE as gender
+		     , AL.PRICE as price
+		     , TO_DATE(TO_CHAR(A.START_DATE, 'YYYY-MM-DD')) - TO_DATE(TO_CHAR(SYSDATE, 'YYYY-MM-DD')) as lastWalk
+		FROM TBL_AGC_LAST AL JOIN TBL_AGC_SEL AGS
+		ON AL.AGC_SEL_CD = AGS.AGC_SEL_CD
+		JOIN TBL_AGC A
+		ON AGS.AGC_CD = A.AGC_CD
+		JOIN TBL_WOK W
+		ON AGS.WOK_CD = W.WOK_CD
+		JOIN TBL_WOK_APPLY WA
+		ON W.WOK_APPLY_CD = WA.WOK_APPLY_CD
+		JOIN TBL_USER_DATA UD
+		ON WA.USER_CD = UD.USER_CD
+		JOIN TBL_GENDER_TYPE GT
+		ON UD.GENDER_TYPE_CD = GT.GENDER_TYPE_CD
+		JOIN TBL_AGC_PET_SEL APS
+		ON A.AGC_CD = APS.AGC_CD
+		JOIN TBL_PET P
+		ON APS.PET_CD = P.PET_CD
+		WHERE APS.DOG_TYPE_CD = 'DT1'
+		  AND A.OWN_CD = #{ownCd}
+		ORDER BY ROWNUM DESC
+	</select>
+	
+	<!-- 대행 취소 -->
+	<select id="agcLastCancel" parameterType="com.togedog.vo.MatchingDTO" statementType="CALLABLE">
+		{ CALL PRC_OWN_REF_INSERT(#{agcCd} ) }
+	</select>
+	
+	
+	
+	<!-- 기록 탭 → 기록 리스트 -->
+	<select id="recList" resultType="com.togedog.vo.RecordDTO">
+		SELECT ROWNUM as rowN
+		     , REC_CD as recCd
+		     , ITEM as item
+		     , TITLE as title
+		     , NAME as name
+		     , INS_DATE as insDate
+		FROM VIEW_REC_LIST
+		WHERE USER_CD = #{userCd}
+		ORDER BY ROWNUM DESC
+	</select>
+	
+	<!-- 기록 탭 → 기록 게시글 보기 -->
+	<select id="recArticle" resultType="com.togedog.vo.RecordDTO">
+		SELECT S.SCH_CD as schCd
+			 , V.REC_CD as recCd
+			 , V.SCH_ITEM_CD as schItemCd
+		     , V.ITEM as item
+		     , W.ITEM as weather
+		     , TO_CHAR(S.START_DATE, 'YYYY-MM-DD') as schDate
+		     , TO_CHAR(S.START_DATE, 'HH24:MI') as startTime
+		     , TO_CHAR(S.END_DATE, 'HH24:MI') as endTime
+		     , ASD.ITEM || ' ' || ASGG.ITEM || ' ' || ADEM.ITEM || ' ' || S.ADDR_DETAIL as addr
+		     , S.TITLE as title
+		     , V.USER_CD as userCd
+		     , V.NAME as name
+		     , V.INS_DATE as insDate
+		     , V.CONTENT as content
+		FROM TBL_SCH S JOIN TBL_SCH_ITEM SI
+		ON S.SCH_ITEM_CD = SI.SCH_ITEM_CD
+		JOIN TBL_WEATHER W
+		ON S.WEATHER_CD = W.WEATHER_CD
+		JOIN TBL_ADDR_D_E_M ADEM
+		ON S.ADDR_D_E_M_CD = ADEM.ADDR_D_E_M_CD
+		JOIN TBL_ADDR_S_G_G ASGG
+		ON ADEM.ADDR_S_G_G_CD = ASGG.ADDR_S_G_G_CD
+		JOIN TBL_ADDR_S_D ASD
+		ON ASGG.ADDR_S_D_CD = ASD.ADDR_S_D_CD
+		JOIN TBL_ACC A
+		ON S.SCH_CD = A.SCH_CD
+		JOIN VIEW_REC_LIST V
+		ON A.ACC_CD = V.ACC_CD
+		WHERE V.REC_CD = #{recCd}
+	</select>
+	
+	<!-- 기록 탭 → 기록 게시글 가계부 -->
+	<select id="recArticleAcc" resultType="com.togedog.vo.RecordDTO">
+		SELECT AT.ITEM as item
+		     , AI.CONTENT as content
+		     , AI.PRICE as price
+		FROM VIEW_REC_LIST V JOIN TBL_ACC A
+		ON V.ACC_CD = A.ACC_CD
+		LEFT JOIN TBL_ACC_INFO AI
+		ON A.ACC_CD = AI.ACC_CD
+		LEFT JOIN TBL_ACC_TYPE AT
+		ON AI.ACC_TYPE_CD = AT.ACC_TYPE_CD
+		WHERE V.REC_CD = #{recCd}
+	</select>
+	
+	<!-- 기록 탭 → 일정 항목 코드 얻어오기 -->
+	<select id="recToSchItem" resultType="java.lang.String">
+		SELECT SCH_ITEM_CD as schItemCd
+		FROM VIEW_REC_LIST
+		WHERE REC_CD = #{recCd}
+	</select>
+	
+	<!-- 기록 탭 → 가계부 코드 얻어오기 -->
+	<select id="recToAcc" resultType="java.lang.String">
+		SELECT ACC_CD as accCd
+		FROM VIEW_REC_LIST
+		WHERE REC_CD = #{recCd}
+	</select>
+	
+	<!-- 기록탭 → 기록 삭제 -->
+	<delete id="recDelete">
+		DELETE FROM
+		<if test="schItemCd == 'SCHI1'">
+			TBL_WALK_REC
+			WHERE WALK_REC_CD = #{recCd}
+		</if>
+		<if test="schItemCd == 'SCHI4'">
+			TBL_EDU_REC
+			WHERE EDU_REC_CD = #{recCd}
+		</if>
+		<if test="schItemCd == 'SCHI5'">
+			TBL_BUT_REC
+			WHERE BUT_REC_CD = #{recCd}
+		</if>
+		<if test="schItemCd == 'SCHI6'">
+			TBL_HEL_REC
+			WHERE HEL_REC_CD = #{recCd}
+		</if>
+		<if test="schItemCd == 'SCHI7'">
+			TBL_SUP_REC
+			WHERE SUP_REC_CD = #{recCd}
+		</if>
+		<if test="schItemCd == 'SCHI8'">
+			TBL_ETC_REC
+			WHERE ETC_REC_CD = #{recCd}
+		</if>
+	</delete>
+	
+	<!-- 기록탭 → 가계부 삭제 -->
+	<delete id="accDelete">
+		DELETE FROM TBL_ACC
+		WHERE ACC_CD = #{accCd}
+	</delete>
+	
+	<!-- 기록탭 → 가계부 항목 삭제 -->
+	<delete id="accInfoDelete">
+		DELETE FROM TBL_ACC_INFO
+		WHERE ACC_CD = #{accCd}
+	</delete>
+	
+	
+	
+	<!-- 날씨 리스트.. 임시 0728 추가 -->
+	<select id="getWeatherList" resultType="com.togedog.vo.WeatherDTO">
+		SELECT WEATHER_CD AS WEATHERCD, ITEM AS WEATHER
+		FROM TBL_WEATHER
+	</select>
+	
+	<!-- 일정등록 -->
+	<insert id="insertSch" parameterType="com.togedog.vo.ScheduleDTO">
+		INSERT INTO TBL_SCH(SCH_CD, OWN_CD, SCH_ITEM_CD, WEATHER_CD, ADDR_D_E_M_CD, ADDR_DETAIL, START_DATE, END_DATE, USER_CD, TITLE)
+		VALUES ('SCH'||SEQ_SCH.NEXTVAL, FUNC_GET_OWNER_CD(#{userCd}), #{schCd} , #{weatherCd}, #{addrSel3Cd}, #{address} , TO_DATE(#{startDate} ,'yyyy-mm-dd hh24:mi:ss'), TO_DATE(#{endDate} ,'yyyy-mm-dd hh24:mi:ss'), #{userCd}, #{title} )
+	</insert> 
+	
+	<!-- 기록 항목 -->
+	<select id="getSchItem" resultType="com.togedog.vo.ScheduleDTO">
+		SELECT SCH_ITEM_CD as schCd
+			 , ITEM as title
+		FROM TBL_SCH_ITEM
+		WHERE ITEM != '대행'
+		  AND ITEM != '그룹'
+	</select>
+	
+	<select id="getSchList" parameterType="com.togedog.vo.ParamDTO" resultType="com.togedog.vo.ParamDTO">
+		SELECT S.SCH_CD as schCd, SI.ITEM as item, TO_NUMBER(TO_CHAR(S.START_DATE, 'DD')) AS schDate
+		FROM TBL_USER U JOIN TBL_OWN O
+		ON U.USER_CD = O.USER_CD
+		JOIN TBL_SCH S
+		ON O.OWN_CD = S.OWN_CD
+		JOIN TBL_SCH_ITEM SI
+		ON S.SCH_ITEM_CD = SI.SCH_ITEM_CD
+		WHERE U.USER_CD = #{code}
+		AND TO_CHAR(START_DATE, 'YYYY-MM') = #{walkDate}
+		ORDER BY START_DATE
+	</select>
+   
+   <select id="ownCalUpdate" parameterType="com.togedog.vo.ParamDTO" statementType="CALLABLE">
+      {
+         CALL PRC_OWN_CAL_UPDATE
+         (
+            #{schCd},
+            #{walkDate}
+         )
+      }
+   </select>
+   
+   <select id="ownCalList" parameterType="com.togedog.vo.ParamDTO" resultType="com.togedog.vo.ParamDTO">
+      SELECT TO_CHAR(S.START_DATE, 'HH24:MI') AS startTime, TO_CHAR(S.END_DATE, 'HH24:MI') AS endTime, S.TITLE AS title, S.ADDR_DETAIL AS addrDetail, SI.ITEM AS item, A.ACC_CD AS code, S.SCH_CD AS schCd
+      FROM TBL_USER U JOIN TBL_OWN O
+      ON U.USER_CD = O.USER_CD
+      JOIN TBL_SCH S
+      ON O.OWN_CD = S.OWN_CD
+      JOIN TBL_SCH_ITEM SI
+      ON S.SCH_ITEM_CD = SI.SCH_ITEM_CD
+      LEFT JOIN TBL_ACC A
+      ON S.SCH_CD = A.SCH_CD
+      WHERE U.USER_CD = #{code}
+      AND TO_CHAR(START_DATE, 'YYYY-MM-DD') = #{walkDate}
+      AND (S.SCH_ITEM_CD = 'SCHI1'
+      OR S.SCH_ITEM_CD = 'SCHI4'
+      OR S.SCH_ITEM_CD = 'SCHI5'
+      OR S.SCH_ITEM_CD = 'SCHI6'
+      OR S.SCH_ITEM_CD = 'SCHI7'
+      OR S.SCH_ITEM_CD = 'SCHI8')
+   </select>
+</mapper>

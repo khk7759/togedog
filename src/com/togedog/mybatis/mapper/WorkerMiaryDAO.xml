@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.togedog.model.IWorkerMiaryDAO">
+
+
+<!-- 워커 받은 대행신청 내역 → 대행 신청 리스트 (수정중)-->
+<!-- <select id="getAgcApply" resultType="com.togedog.vo.MatchingDTO">
+	SELECT ROWNUM as rowN
+		 , AGC_CD as agcCd
+		 , OWN_CD as ownCd
+		 , NICKNAME as nickName
+		 , NAME as name
+		 , PET_NAME as petName
+		 , PHOTO as photo
+		 , GENDER_TYPE_CD as genderCd
+		 , GENDER as gender
+		 , AGE as age 
+		 , WALK_DATE as walkDate
+		 , START_TIME as startTime
+		 , END_TIME as endTime
+		 , ADDR1 AS addr1
+		 , ADDR1CD AS addrCd1
+		 , ADDR2 AS addr2
+		 , ADDR2CD AS addrCd2
+		 , ADDR3 AS addr3
+		 , ADDR3CD AS addrCd3
+		 , ADDR_DETAIL as addrDetail
+		 , INS_DATE as insDate
+	FROM VIEW_AGC_INFO_FOR_WOK
+	ORDER BY ROWNUM DESC
+</select> -->
+<select id="getAgcApply" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+
+SELECT ROWNUM AS rowN
+     , AGC_CD as agcCd
+     , OWN_CD as ownCd
+     , NICKNAME as nickName
+     , NAME as name
+     , PET_NAME as petName
+     , PHOTO as photo
+     , GENDER_TYPE_CD as genderCd
+     , GENDER as gender
+     , AGE as age 
+     , WALK_DATE as walkDate
+     , START_TIME as startTime
+     , END_TIME as endTime
+     , ADDR1 AS addr1
+     , ADDR1CD AS addrCd1
+     , ADDR2 AS addr2
+     , ADDR2CD AS addrCd2
+     , ADDR3 AS addr3
+     , ADDR3CD AS addrCd3
+     , ADDR_DETAIL as addrDetail
+     , INS_DATE as insDate
+FROM 
+(
+	SELECT AGC_CD 
+			 , OWN_CD 
+			 , NICKNAME 
+			 , NAME 
+			 , PET_NAME 
+			 , PHOTO 
+			 , GENDER_TYPE_CD 
+			 , GENDER 
+			 , AGE 
+			 , WALK_DATE 
+			 , START_TIME 
+			 , END_TIME
+			 , ADDR1 
+			 , ADDR1CD 
+			 , ADDR2 
+			 , ADDR2CD 
+			 , ADDR3 
+			 , ADDR3CD 
+			 , ADDR_DETAIL 
+			 , INS_DATE 
+	FROM VIEW_AGC_INFO_FOR_WOK 
+	MINUS
+	SELECT    AGC_CD 
+			 , OWN_CD 
+			 , NICKNAME 
+			 , NAME 
+			 , PET_NAME 
+			 , PHOTO 
+			 , GENDER_TYPE_CD 
+			 , GENDER 
+			 , AGE 
+			 , WALK_DATE 
+			 , START_TIME 
+			 , END_TIME 
+			 , ADDR1 
+			 , ADDR1CD 
+			 , ADDR2 
+			 , ADDR2CD 
+			 , ADDR3 
+			 , ADDR3CD 
+			 , ADDR_DETAIL 
+			 , INS_DATE 
+	FROM VIEW_AGC_WAITING 
+	WHERE WOK_CD = 'WOK12'
+)  
+ORDER BY ROWNUM DESC
+
+</select>
+
+
+
+<!-- 대행신청 내역 → 상세정보(수정중) -->
+<select id="getAgcDetail" resultType="com.togedog.vo.MatchingDTO">
+	SELECT TO_CHAR(A.START_DATE, 'YYYY-MM-DD') as walkDate
+	     , TO_CHAR(A.START_DATE, 'HH24:MI') as startTime
+	     , TO_CHAR(A.END_DATE, 'HH24:MI') as endTime
+	     , ASD.ITEM || ' ' || ASGG.ITEM || ' ' || ADEM.ITEM || ' ' || A.ADDR_DETAIL as addrDetail
+	     , TO_CHAR(A.INS_DATE, 'YYYY-MM-DD') as insDate
+	FROM TBL_AGC A JOIN TBL_ADDR_D_E_M ADEM
+	ON A.ADDR_D_E_M_CD = ADEM.ADDR_D_E_M_CD
+	JOIN TBL_ADDR_S_G_G ASGG
+	ON ADEM.ADDR_S_G_G_CD = ASGG.ADDR_S_G_G_CD
+	JOIN TBL_ADDR_S_D ASD
+	ON ASGG.ADDR_S_D_CD = ASD.ADDR_S_D_CD
+	WHERE A.AGC_CD = #{agcCd}
+</select>	
+
+
+<!-- 워커가 선택해서 견주 선택 대기중 -->
+<select id="waitingAgc" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+	SELECT ROWNUM as rowN
+		 , AGC_SEL_CD AS agcSelCd
+		 , WOK_CD AS wokCd
+		 , AGC_CD as agcCd
+		 , OWN_CD as ownCd 
+		 , INS_DATE as insDate
+		 , WALK_DATE as walkDate
+		 , START_TIME as startTime
+		 , END_TIME as endTime
+		 , NAME as name
+		 , NICKNAME as nickName
+		 , PHOTO as photo
+		 , GENDER_TYPE_CD as genderCd
+		 , GENDER as gender
+		 , AGE as age
+		 , ADDR1 as addr1
+		 , ADDR2 as addr2
+		 , ADDR3 as addr3
+		 , ADDR1CD AS addrCd1
+		 , ADDR2CD AS addrCd2
+		 , ADDR3CD AS addrCd3
+		 , ADDR_DETAIL as addrDetail 
+		 , PET_NAME as petName
+	FROM VIEW_AGC_WAITING
+	WHERE WOK_CD = #{wokCd}
+</select>
+
+<!-- 워커 근무 요일, 시간대 -->
+<select id="getWorkdays" parameterType="java.lang.String" resultType="com.togedog.vo.UserDTO">
+	SELECT DAY_ITEM_CD AS dayCd
+	        , START_TIME AS favStart
+	        , END_TIME AS favEnd
+	FROM TBL_WOK_PSB_DAY
+	WHERE wok_apply_cd = #{wokApplyCd}
+</select>
+
+<!-- 워커 대행선택 tbl_agc_sel -->
+<insert id="insertAGCSel" parameterType="com.togedog.vo.MatchingDTO">
+	INSERT INTO TBL_AGC_SEL(AGC_SEL_CD, AGC_CD, WOK_CD, MSG)
+	VALUES('AS'||SEQ_AS.NEXTVAL, #{agcCd}, #{wokCd}, #{msg})
+</insert>
+
+
+
+</mapper>

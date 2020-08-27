@@ -1,0 +1,213 @@
+@charset "UTF-8";
+/* 폰트 추가 */
+@font-face { font-family: 'Handon3gyeopsal600g'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_seven@1.2/Handon3gyeopsal600g.woff') format('woff'); font-weight: normal; font-style: normal; }
+body
+	{
+		font-family: Handon3gyeopsal600g;
+	}
+
+:root 
+{ 
+	--soft-yellow: #f0f2e7; /* 연노랑 */ 
+	--yellow-color: #FFCC4F; 
+	--deep-navy: #2b4071; /* 진남색 */ 
+	--deep-blue: #3f6abf; /* 진한파랑 */ 
+	--blue: #75c3f8; 
+	--soft-blue: #b4e7fd; 
+	--soft-soft-blue: #daf5fd;
+	--red:#F25C69; /* 쪽지, 알림 뱃지 색  */
+}
+
+
+.body
+{
+	margin : 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+
+}
+
+
+div.container
+{
+	background-color : var(--soft-soft-blue);
+	margin : 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;	
+}
+
+.content-wrap
+{	
+	width :97%;/* 98  */
+	margin : 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	background-color: var(--blue);
+}
+
+
+div.content
+{
+	width: 90%;
+	background-color: var(--soft-blue);
+	margin : 0px 0px 47px 20px;/* 1.3% */
+	padding: 0px 0px 0px 0px;
+	border-radius: 4px;
+
+}
+
+
+.side
+{
+	background-color: var(--soft-blue);
+	margin : 0px 0px 0px 0px;
+	padding: 0px 15px 0px 0px;
+	border-radius: 0px 4px 4px 4px;
+	
+}
+
+.profile
+{
+	margin : 10px 0px 10px 0px;
+	padding: 0px 0px 0px 0px;
+	
+}
+
+div .photo
+{
+	width: 50%;
+	height: 50%;
+	margin : 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+}
+
+div .nick-grade
+{
+	width: 50%;
+	height: 50%;
+	margin : 10px 0px 0px 0px;
+	padding: 5px;
+}
+
+.noti 
+{
+	margin : 5px 0px 5px 0px;
+	padding: 5px 0px 5px 0px;
+	background-color: white;
+	border-radius: 4px 0px 0px 4px; 
+}
+
+.note
+{
+	margin : 5px 0px 5px 0px;
+	padding: 5px 0px 5px 0px;
+	background-color: white;
+	border-radius: 0px 4px 4px 0px;
+}
+
+.profile 
+{
+	background-color: white;
+	border-radius: 4px;
+	margin: 15px 0px 0px 0px;
+	padding: 10px;
+}
+
+
+div.tabbable li
+{
+	background-color: var(--soft-blue);
+	border-radius: 10px 10px 0px 0px;	
+	margin: 10px 0px 0px 0px;
+	box-shadow: 10px gray;
+}
+
+
+.nav-tabs>li>a 
+{
+    margin: 0px 0px 0px 0px;
+}
+
+/* 견주·워커 */
+.nav-tabs {
+    padding: 0px 0px 0px 10px;
+    margin: 10px 10px 0px 0px;
+}
+
+
+.nav>li
+{
+	background-color: var(--soft-blue);
+	border-radius: 0px 10px 10px 0px;	
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+}
+
+/* 메뉴 */
+.nav-bar li
+{
+	margin: 0px 1.3% 0px 0px;
+	padding: 0px 0px 0px 0px;
+}
+
+
+.nav-bar
+{
+	margin: 0px 0px 0px 0px;
+	padding:0px 0px 0px 0px;
+}
+
+
+div.checklist
+{
+	background-color: white;
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	width: 100%;
+	height: 100%;
+	border-radius: 4px;
+	
+}
+
+
+.todayInfo
+{
+	background-color: white;
+	margin: 5px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	width: 100%;
+	height: 100px;
+	border-radius: 4px;
+	
+}
+
+
+div.main
+{
+	width: 83.3%;
+	height: 100%;
+	margin: 15px 0px 15px 0px;
+	padding: 0px 0px 0px 0px;
+	border-radius: 4px 0px 4px 4px;
+	background-color: white;
+	
+}
+
+textarea
+{
+	width: 98%;
+	height: 100%;
+	resize: none;
+}
+
+.btn-group-xs>.btn, .btn-xs {
+	padding: 1px 2px;
+	font-size: 10px;
+	line-height: 1;
+	border-radius: 3px;
+}
+
+
+p
+{
+	text-align : left;
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+}

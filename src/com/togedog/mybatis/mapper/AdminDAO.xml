@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.togedog.model.IAdminDAO">
+
+	<!-- 올해 산책 매칭 횟수 -->
+	<select id="yearWalkLastCount" resultType="int">
+		SELECT COUNT(*) as count
+		FROM TBL_WALK_LAST
+		WHERE TO_CHAR(INS_DATE, 'YYYY') = TO_CHAR(SYSDATE, 'YYYY')
+	</select>
+
+	<!-- 이번달 산책 매칭 횟수 -->
+	<select id="monthWalkLastCount" resultType="int">
+		SELECT COUNT(*) as count
+		FROM TBL_WALK_LAST
+		WHERE TO_CHAR(INS_DATE, 'YYYY-MM') = TO_CHAR(SYSDATE, 'YYYY-MM')
+	</select>
+	
+	<!-- 올해 대행 매칭 횟수 -->
+	<select id="yearAgcLastCount" resultType="int">
+		SELECT COUNT(*) as count
+		FROM TBL_AGC_LAST
+		WHERE TO_CHAR(INS_DATE, 'YYYY') = TO_CHAR(SYSDATE, 'YYYY')
+	</select>
+
+	<!-- 이번달 대행 매칭 횟수 -->
+	<select id="monthAgcLastCount" resultType="int">
+		SELECT COUNT(*) as count
+		FROM TBL_AGC_LAST
+		WHERE TO_CHAR(INS_DATE, 'YYYY-MM') = TO_CHAR(SYSDATE, 'YYYY-MM')
+	</select>
+	
+	<!-- 올해 신규 회원 수 -->
+	<select id="yearUserCount" resultType="int">
+		SELECT COUNT(*) as count
+		FROM TBL_USER_DATA
+		WHERE TO_CHAR(INS_DATE, 'YYYY') = TO_CHAR(SYSDATE, 'YYYY')
+	</select>
+
+	<!-- 이번달 신규 회원 수 -->
+	<select id="monthUserCount" resultType="int">
+		SELECT COUNT(*) as count
+		FROM TBL_USER_DATA
+		WHERE TO_CHAR(INS_DATE, 'YYYY-MM') = TO_CHAR(SYSDATE, 'YYYY-MM')
+	</select>
+	
+	
+	
+	<!-- 관리자 정보 -->
+	<select id="adminInfo" resultType="com.togedog.vo.UserDTO">
+		SELECT ID as id
+		     , NAME as name
+		     , TEL as tel
+		     , ADMIN_CD as code
+		FROM TBL_ADMIN_INFO
+		WHERE ADMIN_CD = #{code}
+	</select>
+	
+	<!-- 관리자 정보 수정 -->
+	<update id="adminInfoUpdate">
+		UPDATE TBL_ADMIN_INFO
+		SET NAME = #{name}, TEL = #{tel}
+		WHERE ID = #{id}
+	</update>
+	
+	<!-- 관리자 비밀번호 확인 -->
+	<select id="adminPw" resultType="java.lang.String">
+		SELECT PW as pwd
+		FROM TBL_ADMIN_INFO
+		WHERE ADMIN_CD = #{code}
+	</select>
+	
+	<!-- 관리자 비밀번호 확인 → 입력된 pw 암호화하여 비교하기 -->
+	<select id="adminUserPw" resultType="java.lang.String">
+		SELECT CRYPTPACK.ENCRYPT(#{pwd}, #{pwd}) as pw
+		FROM DUAL
+	</select>
+	
+	<!-- 관리자 비밀번호 변경 -->
+	<update id="adminPwUpdate">
+		UPDATE TBL_ADMIN_INFO
+		SET PW = CRYPTPACK.ENCRYPT(#{pwd}, #{pwd})
+		WHERE ADMIN_CD = #{code}
+	</update>
+	
+	<!-- 관리자 화면 공지사항 -->
+	<select id="adminNoticeList" resultType="com.togedog.vo.NoticeDTO">
+		SELECT ROWNUM as notiCd1
+			 , A.TITLE as title
+			 , A.NOTICE_CD as notiCd2
+			 , A.NAME as adminName
+			 , A.INS_DATE as insDate
+			 , A.VIEWS as views
+		FROM
+		(
+		    SELECT N.TITLE
+		    	 , N.NOTICE_CD
+		         , AI.NAME
+		         , N.INS_DATE
+		         , N.VIEWS
+		    FROM TBL_NOTICE N JOIN TBL_ADMIN_INFO AI
+		    ON N.ADMIN_CD = AI.ADMIN_CD
+		    ORDER BY INS_DATE
+		)A
+		ORDER BY notiCd1 DESC
+	</select>
+	
+	<!-- 관리자 화면 공지사항 게시글 -->
+	<select id="adminNoticeArticle" resultType="com.togedog.vo.NoticeDTO">
+		SELECT N.TITLE as title
+	    	 , N.NOTICE_CD as notiCd2
+	    	 , AI.ADMIN_CD as adminCd
+	         , AI.NAME as adminName
+	         , TO_CHAR(N.INS_DATE, 'YYYY-MM-DD') as insDate
+	         , N.VIEWS as views
+	         , N.CONTENT as content
+	    	 , NF.NOTICE_FILE as fileName
+	    FROM TBL_NOTICE N JOIN TBL_ADMIN_INFO AI
+	    ON N.ADMIN_CD = AI.ADMIN_CD
+        LEFT JOIN TBL_NOTICE_FILE NF
+        ON N.NOTICE_CD = NF.NOTICE_CD
+		WHERE N.NOTICE_CD = #{notiCd2 }
+	</select>
+	
+	<!-- 공지사항 글쓰기 -->
+	<insert id="noticeInsert">
+		INSERT INTO TBL_NOTICE(NOTICE_CD, TITLE, CONTENT, ADMIN_CD) VALUES('NOTI'||SEQ_NOTI.NEXTVAL, #{title},  #{content}, #{adminCd})
+	</insert>
+	
+	<!-- 공지사항 첨부파일 등록 -->
+	<!-- 
+	<insert id="noticeFile">
+	</insert>
+	-->
+	
+	<!-- 공지사항 수정 -->
+	<update id="noticeUpdate">
+		UPDATE TBL_NOTICE
+		SET TITLE = #{title} , CONTENT = #{content}
+		WHERE NOTICE_CD = #{notiCd2}
+	</update>
+	
+	<!-- 공지사항 삭제 -->
+	<delete id="noticeDelete">
+		DELETE FROM TBL_NOTICE WHERE NOTICE_CD = #{notiCd}
+	</delete>
+	
+	
+	
+	<!-- 견주 리스트 -->
+	<select id="ownerList" resultType="com.togedog.vo.UserDTO">
+		SELECT UD.USER_CD as code
+		     , UD.ID as id
+		     , UD.NAME as name
+		     , UD.TEL as tel
+		     , UD.EMAIL as email
+		FROM TBL_OWN O JOIN TBL_USER_DATA UD
+		ON O.USER_CD = UD.USER_CD
+		LEFT JOIN TBL_USER_BYE UB
+		ON O.USER_CD = UB.USER_CD
+		LEFT JOIN TBL_USER_STOP US
+		ON O.USER_CD = US.USER_CD
+		LEFT JOIN TBL_BLK B
+		ON O.USER_CD = B.USER_CD
+		WHERE UB.USER_BYE_CD IS NULL
+		  AND US.USER_STOP_CD IS NULL
+		  AND B.BLK_CD IS NULL
+	</select>
+	
+	<!-- 견주 상세정보 -->
+	<select id="ownerDetail" resultType="com.togedog.vo.UserDTO">
+		SELECT UD.USER_CD as code
+			 , UD.USER_TYPE_CD as userTypeCd
+			 , UD.NAME as name
+		     , TO_CHAR(UD.BIRTHDAY, 'YYYY-MM-DD') as birthday
+		     , TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) - TO_NUMBER(TO_CHAR(UD.BIRTHDAY, 'YYYY')) + 1 as age
+		     , GT.TYPE as gender
+		     , UD.ID as id
+		     , O.NICKNAME as nickName
+		     , FUNC_OWN_AVG(O.OWN_CD) as rate
+		     , FUNC_OWN_GRADE(O.OWN_CD) as grade
+		     , FUNC_OWN_POINT(O.OWN_CD) as point
+		     , UD.TEL as tel
+		     , UD.EMAIL as email
+		     , ASD.ITEM || ' ' || ASGG.ITEM || ' ' || ADEM.ITEM as addr3
+		     , UD.ADDR_DETAIL as addrDetail
+		     , BI.ITEM as bank
+		     , UD.ACC_NUM as accNum
+		FROM TBL_OWN O JOIN TBL_USER_DATA UD
+		ON O.USER_CD = UD.USER_CD
+		JOIN TBL_GENDER_TYPE GT
+		ON UD.GENDER_TYPE_CD = GT.GENDER_TYPE_CD
+		JOIN TBL_ADDR_D_E_M ADEM
+		ON UD.ADDR_D_E_M_CD = ADEM.ADDR_D_E_M_CD
+		JOIN TBL_ADDR_S_G_G ASGG
+		ON ADEM.ADDR_S_G_G_CD = ASGG.ADDR_S_G_G_CD
+		JOIN TBL_ADDR_S_D ASD
+		ON ASGG.ADDR_S_D_CD = ASD.ADDR_S_D_CD
+		JOIN TBL_BANK_ITEM BI
+		ON UD.BANK_ITEM_CD = BI.BANK_ITEM_CD
+		WHERE UD.USER_CD = #{code}
+	</select>
+	
+	<!-- 견주 상세정보 → 공유 회원 -->
+	<select id="ownerShareUser" resultType="com.togedog.vo.UserDTO">
+		SELECT UD.ID as id
+		     , UD.NAME as name
+		FROM TBL_SHARE_PET SP JOIN TBL_PET P
+		ON SP.PET_CD = P.PET_CD
+		JOIN TBL_OWN O
+		ON SP.OWN_CD = O.OWN_CD
+		JOIN TBL_USER_DATA UD
+		ON O.USER_CD = UD.USER_CD
+		JOIN TBL_OWN O2
+		ON P.OWN_CD = O2.OWN_CD
+		WHERE O2.USER_CD = #{code}
+	</select>
+	
+	<!-- 견주 상세정보 → 소유 펫 -->
+	<select id="ownerSharePet" resultType="com.togedog.vo.PetDTO">
+		SELECT P.NAME as petName
+		     , DI.NAME as dogItem
+		     , FUNC_PET_SIZE_NAME(P.PET_CD) as petSize
+		     , TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) - TO_NUMBER(TO_CHAR(P.BIRTH, 'YYYY')) + 1 as petAge
+		     , GT.TYPE as petGender
+		     , TO_CHAR(P.NEUTRAL_DATE, 'YYYY-MM-DD') as neutralDate
+		FROM VIEW_ALL_PET V JOIN TBL_OWN O
+		ON V.OWN_CD = O.OWN_CD
+		JOIN TBL_PET P
+		ON V.PET_CD = P.PET_CD
+		JOIN TBL_DOG_ITEM DI
+		ON P.DOG_ITEM_CD = DI.DOG_ITEM_CD
+		JOIN TBL_GENDER_TYPE GT
+		ON P.GENDER_TYPE_CD = GT.GENDER_TYPE_CD
+		WHERE O.USER_CD = #{code}
+	</select>
+	
+	<!-- 워커 리스트 -->
+	<select id="workerList" resultType="com.togedog.vo.UserDTO">
+		SELECT UD.USER_CD as code
+		     , UD.ID as id
+		     , UD.NAME as name
+		     , UD.TEL as tel
+		     , UD.EMAIL as email
+		FROM TBL_WOK W JOIN TBL_WOK_APPLY WA
+		ON W.WOK_APPLY_CD = WA.WOK_APPLY_CD
+		JOIN TBL_USER_DATA UD
+		ON WA.USER_CD = UD.USER_CD
+		LEFT JOIN TBL_USER_BYE UB
+		ON WA.USER_CD = UB.USER_CD
+		LEFT JOIN TBL_USER_STOP US
+		ON WA.USER_CD = US.USER_CD
+		LEFT JOIN TBL_BLK B
+		ON WA.USER_CD = B.USER_CD
+		WHERE UB.USER_BYE_CD IS NULL
+		  AND US.USER_STOP_CD IS NULL
+		  AND B.BLK_CD IS NULL
+	</select>
+	
+	<!-- 워커 상세정보 -->
+	<select id="workerDetail" resultType="com.togedog.vo.UserDTO">
+		SELECT UD.USER_CD as code
+			 , UD.USER_TYPE_CD as userTypeCd
+		     , UD.NAME as name
+		     , UD.ID as id
+		     , GT.TYPE as gender
+		     , TO_CHAR(UD.BIRTHDAY, 'YYYY-MM-DD') as birthday
+		     , TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) - TO_NUMBER(TO_CHAR(UD.BIRTHDAY, 'YYYY')) + 1 as age
+		     , FUNC_WOK_FDB_AVG(W.WOK_CD) as rate
+		     , UD.TEL as tel
+		     , UD.EMAIL as email
+		     , ASD.ITEM || ' ' || ASGG.ITEM || ' ' || ADEM.ITEM as addr3
+		     , UD.ADDR_DETAIL as addrDetail
+		     , BI.ITEM as bank
+		     , UD.ACC_NUM as accNum
+		FROM TBL_WOK W JOIN TBL_WOK_APPLY WA
+		ON W.WOK_APPLY_CD = WA.WOK_APPLY_CD
+		JOIN TBL_USER_DATA UD
+		ON WA.USER_CD = UD.USER_CD
+		JOIN TBL_GENDER_TYPE GT
+		ON UD.GENDER_TYPE_CD = GT.GENDER_TYPE_CD
+		JOIN TBL_ADDR_D_E_M ADEM
+		ON UD.ADDR_D_E_M_CD = ADEM.ADDR_D_E_M_CD
+		JOIN TBL_ADDR_S_G_G ASGG
+		ON ADEM.ADDR_S_G_G_CD = ASGG.ADDR_S_G_G_CD
+		JOIN TBL_ADDR_S_D ASD
+		ON ASGG.ADDR_S_D_CD = ASD.ADDR_S_D_CD
+		JOIN TBL_BANK_ITEM BI
+		ON UD.BANK_ITEM_CD = BI.BANK_ITEM_CD
+		WHERE UD.USER_CD = #{code}
+	</select>
+	
+	<!-- 활동 정지 동작 -->
+	<insert id="stopTermInsert">
+		INSERT INTO TBL_USER_STOP(USER_STOP_CD, USER_CD, STOP_DATE)
+		VALUES('US'||SEQ_US.NEXTVAL, #{code}, #{stopNum})
+	</insert>
+	
+	<!-- 강제탈퇴 사유 리스트 -->
+	<select id="blkItem" resultType="com.togedog.vo.UserDTO">
+		SELECT BLK_RSN_ITEM_CD as blkItemCd
+		     , ITEM as blackItem
+		FROM TBL_BLK_RSN_ITEM
+	</select>
+	
+	<!-- 블랙리스트 등록 -->
+	<insert id="blkInsert">
+		INSERT INTO TBL_BLK(BLK_CD, BLK_RSN_ITEM_CD, USER_CD)
+		VALUES('BRI'||SEQ_BRI.NEXTVAL, #{blkItemCd}, #{code})
+	</insert>
+	
+	
+	
+	<!-- 탈퇴회원 → 견주 리스트 -->
+	<select id="userByeOwnerList" resultType="com.togedog.vo.UserDTO">
+		SELECT UD.USER_CD as code
+			 , UD.ID as id
+		     , UD.NAME as name
+		     , UD.TEL as tel
+		     , UD.EMAIL as email
+		FROM TBL_USER_BYE UB JOIN TBL_USER_DATA UD
+		ON UB.USER_CD = UD.USER_CD
+		JOIN TBL_OWN O
+		ON UD.USER_CD = O.USER_CD
+	</select>
+	
+	<!-- 탈퇴회원 → 워커 리스트 -->
+	<select id="userByeWorkerList" resultType="com.togedog.vo.UserDTO">
+		SELECT UD.USER_CD as code
+			 , UD.ID as id
+		     , UD.NAME as name
+		     , UD.TEL as tel
+		     , UD.EMAIL as email
+		FROM TBL_USER_BYE UB JOIN TBL_USER_DATA UD
+		ON UB.USER_CD = UD.USER_CD
+		JOIN TBL_WOK_APPLY WA
+		ON UD.USER_CD = WA.USER_CD
+		JOIN TBL_WOK W
+		ON WA.WOK_APPLY_CD = W.WOK_APPLY_CD
+	</select>
+	
+	
+	
+	<!-- 활동 정지 회원 리스트 -->
+	<select id="userStopList" resultType="com.togedog.vo.UserDTO">
+		SELECT US.USER_STOP_CD as code
+			 , UD.ID as id
+		     , UD.NAME as name
+		     , TO_CHAR(US.INS_DATE, 'YYYY-MM-DD') as insDate
+		     , US.STOP_DATE as stopNum
+		     , TO_CHAR((US.INS_DATE + US.STOP_DATE), 'YYYY-MM-DD') as stopNumDate
+		     , CASE WHEN US.INS_DATE + US.STOP_DATE >= SYSDATE THEN -1 ELSE 1 END as stopEnd
+		FROM TBL_USER_STOP US JOIN TBL_USER_DATA UD
+		ON US.USER_CD = UD.USER_CD
+		ORDER BY US.INS_DATE DESC
+	</select>
+	
+	<!-- 활동정지 해제 -->
+	<update id="userStopDone">
+		UPDATE TBL_USER_STOP
+		SET STOP_DATE = -1
+		WHERE USER_STOP_CD = #{code}
+	</update>
+	
+	
+	<!-- 강제 탈퇴 회원 리스트 -->
+	<select id="blackList" resultType="com.togedog.vo.UserDTO">
+		SELECT B.BLK_CD as code
+		     , UD.ID as id
+		     , UD.NAME as name
+		     , TO_CHAR(B.INS_DATE, 'YYYY-MM-DD') as insDate
+		     , BRI.ITEM as blackItem
+		FROM TBL_BLK B JOIN TBL_USER_DATA UD
+		ON B.USER_CD = UD.USER_CD
+		JOIN TBL_BLK_RSN_ITEM BRI
+		ON B.BLK_RSN_ITEM_CD = BRI.BLK_RSN_ITEM_CD
+	</select>
+	
+	<!-- 재가입 허용 -->
+	<delete id="blackDelete">
+		DELETE FROM TBL_BLK
+		WHERE BLK_CD = #{code}
+	</delete>
+	
+	
+	<!-- 관리자 리스트 -->
+	<select id="adminList" resultType="com.togedog.vo.UserDTO">
+		SELECT AT.TYPE as userType
+	     	 , AI.ID as id
+		     , AI.NAME as name
+		     , AI.TEL as tel
+		     , AI.ADMIN_CD as code
+		FROM TBL_ADMIN_INFO AI JOIN TBL_ADMIN_TYPE AT
+		ON AI.ADMIN_TYPE_CD = AT.ADMIN_TYPE_CD
+	</select>
+	
+	<!-- 관리자 등록 -->
+	<select id="adminInsert" parameterType="com.togedog.vo.UserDTO" statementType="CALLABLE">
+	   { 
+	      CALL PRC_ADMIN_INSERT
+	      (
+	         #{name},
+	         #{tel}
+	      )
+	   }
+	</select>
+	
+	<!-- 관리자 비밀번호 초기화 -->
+	<update id="adminPwReset">
+		UPDATE TBL_ADMIN_INFO
+		SET PW = CRYPTPACK.ENCRYPT(SUBSTR(#{tel}, 10), SUBSTR(#{tel}, 10))
+		WHERE ID = #{id}
+	</update>
+	
+	<!-- 관리자 삭제 -->
+	<delete id="adminDelete">
+		DELETE FROM TBL_ADMIN_INFO
+		WHERE ID = #{id}
+	</delete>
+	
+	<!-- 워커 신청 리스트 -->
+	<select id="workerApplyList" resultType="com.togedog.vo.UserDTO">
+		SELECT WA.WOK_APPLY_CD as wokCd
+		     , UD.USER_CD as code
+		     , UD.ID as id
+		     , UD.NAME as name
+		     , TO_CHAR(WA.INS_DATE, 'YYYY-MM-DD') as insDate
+		FROM TBL_WOK_APPLY WA JOIN TBL_USER_DATA UD
+		ON WA.USER_CD = UD.USER_CD
+		LEFT JOIN TBL_WOK W
+		ON WA.WOK_APPLY_CD = W.WOK_APPLY_CD
+		LEFT JOIN TBL_USER_BYE UB
+		ON WA.USER_CD =  UB.USER_CD
+		LEFT JOIN TBL_BLK B
+		ON WA.USER_CD = B.USER_CD
+		LEFT JOIN TBL_WOK_NO WN
+		ON WA.WOK_APPLY_CD = WN.WOK_APPLY_CD
+		WHERE W.WOK_CD IS NULL
+		  AND UB.USER_BYE_CD IS NULL
+		  AND B.BLK_CD IS NULL
+		  AND WN.WOK_NO_CD IS NULL
+	</select>
+	
+	<!-- 워커 신청 상세보기 -->
+	<select id="workerApplyDetail" resultType="com.togedog.vo.UserDTO">
+		SELECT WA.WOK_APPLY_CD as wokCd
+			 , UD.NAME as name
+		     , GT.TYPE as gender
+		     , JI.ITEM as job
+		     , TO_CHAR(UD.BIRTHDAY, 'YYYY-MM-DD') as birthday
+		     , TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) - TO_NUMBER(TO_CHAR(UD.BIRTHDAY, 'YYYY')) + 1 as age
+		     , UD.TEL as tel
+		     , UD.EMAIL as email
+		     , ASD.ITEM || ' ' || ASGG.ITEM || ' ' || ADEM.ITEM as addr3
+		     , UD.ADDR_DETAIL as addrDetail
+		     , WA.CAREER_NAME as careerName
+		     , WA.NURTURE_EXP as nurtureExp
+		     , WA.QUESTION1 as question1
+		     , WA.QUESTION2 as question2
+		     , WA.MSG as msg
+		FROM TBL_WOK_APPLY WA JOIN TBL_USER_DATA UD
+		ON WA.USER_CD = UD.USER_CD
+		JOIN TBL_GENDER_TYPE GT
+		ON UD.GENDER_TYPE_CD = GT.GENDER_TYPE_CD
+		JOIN TBL_ADDR_D_E_M ADEM
+		ON UD.ADDR_D_E_M_CD = ADEM.ADDR_D_E_M_CD
+		JOIN TBL_ADDR_S_G_G ASGG
+		ON ADEM.ADDR_S_G_G_CD = ASGG.ADDR_S_G_G_CD
+		JOIN TBL_ADDR_S_D ASD
+		ON ASGG.ADDR_S_D_CD = ASD.ADDR_S_D_CD
+		JOIN TBL_JOB_ITEM JI
+		ON WA.JOB_ITEM_CD = JI.JOB_ITEM_CD
+		LEFT JOIN TBL_WOK W
+		ON WA.WOK_APPLY_CD = W.WOK_APPLY_CD
+		LEFT JOIN TBL_USER_BYE UB
+		ON WA.USER_CD =  UB.USER_CD
+		LEFT JOIN TBL_BLK B
+		ON WA.USER_CD = B.USER_CD
+		WHERE WA.WOK_APPLY_CD = #{wokCd}
+	</select>
+	
+	<!-- 워커 자격증 리스트 -->
+	<select id="workerCrtList" resultType="com.togedog.vo.UserDTO">
+		SELECT CI.ITEM as crtItem
+		FROM TBL_WOK_LCS WL JOIN TBL_CRT_ITEM CI
+		ON WL.CRT_ITEM_CD = CI.CRT_ITEM_CD
+		WHERE WL.WOK_APPLY_CD = #{wokCd}
+	</select>
+	
+	<!-- 워커 선호요일 리스트 -->
+	<select id="workerPsbList" resultType="com.togedog.vo.UserDTO">
+		SELECT DI.ITEM as day
+		     , WPD.START_TIME as favStart
+		     , WPD.END_TIME as favEnd
+		FROM TBL_WOK_PSB_DAY WPD JOIN TBL_DAY_ITEM DI
+		ON WPD.DAY_ITEM_CD = DI.DAY_ITEM_CD
+		WHERE WPD.WOK_APPLY_CD = #{wokCd}
+	</select>
+	
+	<!-- 워커 거절 사유 리스트 -->
+	<select id="workerNoItemList" resultType="com.togedog.vo.UserDTO">
+		SELECT NO_RSN_ITEM_CD as itemCd
+			 , ITEM as item
+		FROM TBL_NO_RSN_ITEM
+	</select>
+	
+	<!-- 워커 등록 -->
+	<insert id="workerok">
+		INSERT INTO TBL_WOK(WOK_CD, WOK_APPLY_CD, ADMIN_CD)
+		VALUES('WOK'||SEQ_WOK.NEXTVAL, #{wokCd}, #{code})
+	</insert>
+	
+	<!-- 워커 거절 -->
+	<insert id="workerno">
+		INSERT INTO TBL_WOK_NO(WOK_NO_CD, WOK_APPLY_CD, NO_RSN_ITEM_CD, ADMIN_CD)
+		VALUES('WN'||SEQ_WN.NEXTVAL, #{wokCd}, #{itemCd}, #{code})
+	</insert>
+</mapper>

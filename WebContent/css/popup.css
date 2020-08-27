@@ -1,0 +1,146 @@
+@charset "UTF-8";
+
+/* main.css */
+
+
+@font-face { font-family: 'Handon3gyeopsal600g'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_seven@1.2/Handon3gyeopsal600g.woff') format('woff'); font-weight: normal; font-style: normal; }
+
+body { text-align: center; }
+table { margin: auto; }
+table th, td { text-align: center; } /* 0730  left 에서 center 로 바꿈 */
+
+/* #main-header
+{
+	background: #a0d8ef; Old browsers
+	background: -moz-linear-gradient(top,  #a0d8ef 0%, #ddf1f9 71%, #feffff 100%); FF3.6-15
+	background: -webkit-linear-gradient(top,  #a0d8ef 0%,#ddf1f9 71%,#feffff 100%); Chrome10-25,Safari5.1-6
+	background: linear-gradient(to bottom,  #a0d8ef 0%,#ddf1f9 71%,#feffff 100%); W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a0d8ef', endColorstr='#feffff',GradientType=0 ); IE6-9
+} */
+
+/* body, p, div, span, input, table, th, td, select
+{
+	font-size: normal;
+	color: #a3a3a3;
+	font-family: 맑은 고딕;
+}
+
+.container
+{
+	position: relative;
+	width: 300px;
+	height: 200px;
+}
+
+.box
+{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+} */
+/*
+.control
+{
+	border: 1px light gray;
+	border-radius: 3px;
+}
+
+.table
+{
+	border-collapse: collapse;
+	width: 100%;
+}
+
+.table th, .table td
+{
+	border: 1px light gray;
+	border-left: 0px;
+	border-right: 0px;
+	padding: 3px;
+	line-height: 150%;
+}
+
+.table th
+{
+	font-weight: bold;
+	color: #ff9191;
+	background-color: #ffe8e8;
+}
+
+.table td
+{
+	font-size: 15px;
+} */
+
+.btn
+{
+	color: #ffffff;
+	background-color: #75C3F8;
+	font-weight: bold;
+	border: 0px;
+	border-radius: 12px;
+	outline: 0;
+	padding: 0.75em 2.5em 0.75em 2.5em;
+	letter-spacing: 0.05em;
+	box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.btn:hover
+{
+	color: #ffffff;
+	background-color: #41B0FA;
+	box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+#footer-text
+{
+	color: #8F8F8F;
+	font-size: small;
+}
+
+.input-group {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.login-box {
+    line-height: 2.3em;
+    font-size: 1em;
+    color: #aaa;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+
+/* 
+input.txt
+{
+	font-size: small;
+	color: #000000;
+}
+
+input.txt:focus
+{
+	background-color: #ffe8e8;
+}
+
+#result
+{
+	text-align: center;
+}
+
+#sendBtn
+{
+	color: #ff9191;
+	background-color: #ffe8e8;
+	font-size: 16px;
+	font-weight: bold;
+	border: 0px;
+	border-radius: 12px;
+	outline: 0;
+	padding: 0.75em 2.5em 0.75em 2.5em;
+	letter-spacing: 0.20em;
+	box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+} */

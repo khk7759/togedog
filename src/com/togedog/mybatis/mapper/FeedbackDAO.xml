@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.togedog.model.IFeedbackDAO">
+	<!-- 강아지 피드백을 뽑아내는 list -->
+	<select id="dogFeedbackList" resultType="com.togedog.vo.FeedbackDTO">
+		SELECT PET_FDB_ITEM_CD AS dogFdbItemCd, ITEM AS dogFdbItem
+		FROM TBL_PET_FDB_ITEM
+	</select>
+	
+	<!-- 견주 피드백을 뽑아내는 list -->
+	<select id="ownFeedbackList" resultType="com.togedog.vo.FeedbackDTO">
+		SELECT OWN_FDB_ITEM_CD AS ownFdbItemCd, ITEM AS ownFdbItem
+		FROM TBL_OWN_FDB_ITEM
+	</select>
+	
+	<!-- 워커 피드백을 뽑아내는 list -->
+	<select id="wokFeedbackList" resultType="com.togedog.vo.FeedbackDTO">
+		SELECT WOK_FDB_ITEM_CD AS wokFdbItemCd, ITEM AS wokFdbItem
+		FROM TBL_WOK_FDB_ITEM
+	</select>
+	
+	<!-- 해당하는 펫을 데리고 오는 xml -->
+	<select id="getPetName" parameterType="java.lang.String" resultType="com.togedog.vo.FeedbackDTO">
+		SELECT WALK_PET_SEL_CD AS walkPetSelCd
+		     , PET_CD AS PETCD
+		     , NAME AS PETNAME
+		FROM VIEW_WALK_LAST_PET_DETAIL
+		WHERE WALK_CD = FUNC_GET_OTHER_WALK_CD('USER9', 'WLAST14');
+	</select>
+</mapper>  

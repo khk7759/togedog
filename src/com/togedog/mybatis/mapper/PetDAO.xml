@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.togedog.model.IPetDAO">
+	<!-- 강아지 등록 -->
+	<select id="petAdd" parameterType="com.togedog.vo.PetDTO" resultType="java.lang.String" statementType="CALLABLE">
+		{CALL PRC_PET_INSERT(
+					#{petGenderCd},
+					#{dogItemCd },
+					#{ownCd },
+					#{petName },
+					#{neutralDate, jdbcType=DATE },
+					#{petBirthday },
+					#{petPhoto, jdbcType=VARCHAR },
+				    #{allergeName, jdbcType=VARCHAR },
+				    #{disaName, jdbcType=VARCHAR },
+				    #{weight },
+					#{result, mode=OUT, jdbcType=VARCHAR}
+			)	
+		}
+	</select>
+	
+	<!-- 예방접종 리스트 --><!-- 0726 추가 -->
+	<select id="getVacList" resultType="com.togedog.vo.VacDTO">
+		SELECT VAC_ITEM_CD AS VACCD, ITEM AS VACITEM, PERIOD AS PERIOD
+		FROM TBL_VAC_ITEM
+	</select>
+	
+	<!-- 견종리스트 --><!--0726 추가  -->
+	<select id="getDogItemList" resultType="com.togedog.vo.PetDTO">
+		SELECT DOG_ITEM_CD AS DOGITEMCD, NAME AS dogItem, STAN_WEIGHT AS stanWeight
+		FROM TBL_DOG_ITEM
+		ORDER BY NAME
+	</select>
+	
+	<!-- 알러지 등록 -->
+	<insert id="insertAllerge" parameterType="com.togedog.vo.PetDTO">
+    	INSERT INTO TBL_ALLERGE(ALLERGE_CD, PET_CD, NAME) 
+    	VALUES('ALLE'||SEQ_ALLE.NEXTVAL, #{petCd}, #{allergeName })
+	</insert>
+   
+	
+	<!-- 장애 등록 -->
+	<insert id="insertDisable" parameterType="com.togedog.vo.PetDTO">
+    	INSERT INTO TBL_DISA(DISA_CD, PET_CD, NAME) 
+    	VALUES('DISA'||SEQ_DISA.NEXTVAL, #{petCd}, #{disaName })
+    </insert>
+    
+	<!-- 예방접종 등록 -->
+	<insert id="insertVac" parameterType="com.togedog.vo.PetDTO">
+		INSERT INTO TBL_VAC(VAC_CD, PET_CD, VAC_ITEM_CD)
+		VALUES('VAC'||SEQ_VAC.NEXTVAL, #{petCd}, #{vacCd})
+	</insert>
+	
+	
+	
+</mapper>
+

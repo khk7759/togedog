@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.togedog.model.IMainDAO">
+	<select id="getWalkPetCount" resultType="int">
+		SELECT COUNT(*) as walkPetCount
+		FROM TBL_WALK_PET_SEL WPS JOIN TBL_WALK_LAST WL
+		ON WPS.WALK_CD = WL.WALK_CD
+		WHERE WL.INS_DATE = SYSDATE
+	</select>
+	
+	<select id="getAgcPetCount" resultType="int">
+		SELECT COUNT(*) as agcPetCount
+		FROM TBL_AGC_PET_SEL WAS JOIN TBL_AGC_SEL ASEL
+		ON WAS.AGC_CD = ASEL.AGC_CD
+		JOIN TBL_AGC_LAST AL
+		ON ASEL.AGC_SEL_CD = AL.AGC_SEL_CD
+		WHERE AL.INS_DATE = SYSDATE
+	</select>
+	
+	<select id="getOwnCount" resultType="int">
+		SELECT COUNT(*) as ownCount
+		FROM TBL_OWN
+	</select>
+	
+	<select id="getPetCount" resultType="int">
+		SELECT COUNT(*) as petCount
+		FROM TBL_PET
+	</select>
+	
+	<select id="getWokCount" resultType="int">
+		SELECT COUNT(*) as wokCount
+		FROM TBL_WOK
+	</select>
+	<!-- 
+	<select id="getGroupCount" resultType="int">
+		SELECT COUNT(*) as groupCount
+		FROM TBL_GR
+	</select>
+	-->
+	<!-- 메인마이정보 수정 -->
+	<update id="updateMainMyInfo" parameterType="com.togedog.vo.UserDTO">
+		
+		UPDATE TBL_USER_DATA
+		SET PW = CASE WHEN #{pwd} IS NOT NULL 
+				 THEN  CRYPTPACK.ENCRYPT(#{pwd }, #{pwd }) ELSE #{beforePwd}  END
+			, ADDR_D_E_M_CD = #{addrCd3 }
+			, ADDR_DETAIL = #{addrDetail }
+			, TEL = #{tel }
+			, BANK_ITEM_CD = #{bankCd }
+			, ACC_NUM = #{accNum }
+		WHERE USER_CD = #{code} 
+				
+	</update>
+	
+	<!-- 회원의 기존 비밀번호와 같은지 확인 -->
+	<select id="pwCheck" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT CRYPTPACK.ENCRYPT(#{pwd}, #{pwd}) as pwd
+		FROM DUAL
+	</select>
+	
+	<!-- 서비스 탈퇴 -->
+	<insert id="insertUserBye" parameterType="java.lang.String">
+		INSERT INTO TBL_USER_BYE(USER_BYE_CD, USER_CD)
+		VALUES('UB'||SEQ_UB.NEXTVAL, #{code })
+	</insert>
+	
+</mapper>
+

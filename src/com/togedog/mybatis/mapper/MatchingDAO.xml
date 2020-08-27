@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.togedog.model.IMatchingDAO">
+	<!-- 1차 추천 리스트 -->
+	<select id="walkList1" parameterType="com.togedog.vo.MatchingDTO" resultType="com.togedog.vo.MatchingDTO">
+		SELECT ROWNUM as rowN
+		    , WALK_CD as walkCd
+		    , NICKNAME as nickName
+		    , AGE as age
+		    , GENDER_CD as genderCd
+		    , GENDER as gender
+		    , GRADE_CD as gradeCd
+		    , GRADE as grade
+		    , FDB_AVG as fdbAvg
+		    , FDB_COUNT as fdbCount
+		    , INTR_ITEM as intr
+		    , INTR_DETAIL as intrDetail
+		    , ASD_CD as addrCd1
+		    , ASD as addr1
+		    , ASGG_CD as addrCd2
+		    , ASGG as addr2
+		    , ADEM_CD as addrCd3
+		    , ADEM as addr3
+		    , ADDRESS as addrDetail
+		    , WALK_DATE as walkDate
+		    , START_TIME as startTime
+		    , END_TIME as endTime
+		    , INS_DATE as insDate
+		    , PET_NAME as petName
+		    , PET_AGE as petAge
+		    , PET_GENDER as petGender
+		    , WEIGHT as weight
+		    , NEUTRAL_DATE as neutralDate
+		    , MD_HEAD as mdHead
+		    , MD_BODY as mdBody
+		    , DOGTYPE as dogType
+		    , PET_COUNT as petCount
+		    , LAST_WALK as lastWalk
+		FROM
+		(
+		    SELECT *
+		    FROM VIEW_WALK_1
+		    WHERE INTR_ITEM_CD = #{intrCd}
+		    AND ASD_CD = #{addrCd1}
+		    AND ASGG_CD = #{addrCd2}
+		    AND ADEM_CD = #{addrCd3}
+		    AND WALK_DATE = #{walkDate}
+		    AND START_TIME = #{startTime}
+		    AND END_TIME = #{endTime}
+		    AND (PET_GENDER_CD = #{petGenderCd}
+		    OR NEUTRAL_DATE IS NOT NULL)
+		    <if test="genderCd == 'GT1' or genderCd == 'GT2'">
+		       AND GENDER_CD = #{genderCd}
+		    </if>
+		    AND GRADE_CD = #{gradeCd}
+		    AND OWN_CD != #{ownCd}
+		    AND FUN_BLOCK(#{ownCd}, OWN_CD) = 0
+		    <![CDATA[ 
+		    ORDER BY FDB_AVG DESC,
+		    (
+		        CASE 
+		        WHEN PET_AGE - #{petAge} < 0
+		        THEN (PET_AGE - #{petAge}) * -1
+		        ELSE PET_AGE - #{petAge}
+		        END
+		    ),
+		    (
+		        CASE 
+		        WHEN AGE - #{age} < 0
+		        THEN (AGE - #{age}) * -1
+		        ELSE AGE - #{age}
+		        END
+		    ),
+		    (
+		        CASE 
+		        WHEN WEIGHT - #{weight} < 0
+		        THEN (WEIGHT - #{weight}) * -1
+		        ELSE WEIGHT - #{weight}
+		        END
+		    ), GD DESC
+		)
+		WHERE ROWNUM <= 3
+		]]>
+	</select>
+   
+	<select id="getGender" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT GT.GENDER_TYPE_CD AS genderCd, GT.TYPE as gender
+        FROM TBL_USER U JOIN TBL_USER_DATA UD
+        ON U.USER_CD = UD.USER_CD
+        JOIN TBL_GENDER_TYPE GT
+        ON UD.GENDER_TYPE_CD = GT.GENDER_TYPE_CD
+        WHERE U.USER_CD = #{code}
+    </select>
+	
+	<select id="walkDetailOwn" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT UD.PHOTO AS photo
+			 , O.NICKNAME AS nickName
+			 , TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) - TO_NUMBER(TO_CHAR(UD.BIRTHDAY, 'YYYY')) + 1 AS age
+			 , II.ITEM AS intr, O.INTR_DETAIL AS intrDetail
+			 , TO_CHAR(WI.START_DATE, 'YYYY-MM-DD') AS walkDate
+			 , TO_CHAR(WI.START_DATE, 'HH24:MI') AS startTime
+			 , TO_CHAR(WI.END_DATE, 'HH24:MI') AS endTime
+			 , ASD.ITEM AS addr1
+			 , ASGG.ITEM AS addr2
+			 , ADEM.ITEM AS addr3
+			 , WI.ADDR_DETAIL AS addrDetail
+			 , TO_CHAR(FUN_WALK_DATE(O.OWN_CD), 'YYYY-MM-DD') AS lastWalk
+		FROM TBL_USER U JOIN TBL_USER_DATA UD
+		ON U.USER_CD = UD.USER_CD
+		JOIN TBL_OWN O
+		ON U.USER_CD = O.USER_CD
+		JOIN TBL_INTR_ITEM II
+		ON O.INTR_ITEM_CD = II.INTR_ITEM_CD
+		JOIN TBL_WALK W
+		ON O.OWN_CD = W.OWN_CD
+		JOIN TBL_WALK_INFO WI
+		ON W.WALK_CD = WI.WALK_CD
+		JOIN TBL_ADDR_D_E_M ADEM
+		ON WI.ADDR_D_E_M_CD = ADEM.ADDR_D_E_M_CD
+		JOIN TBL_ADDR_S_G_G ASGG
+		ON ADEM.ADDR_S_G_G_CD = ASGG.ADDR_S_G_G_CD
+		JOIN TBL_ADDR_S_D ASD
+		ON ASGG.ADDR_S_D_CD = ASD.ADDR_S_D_CD
+		WHERE W.WALK_CD = #{walkCd}
+	</select>
+	
+	<!-- 강아지 상세정보 -->
+	<select id="walkDetailPet" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT P.PHOTO AS photo
+			 , MNUI.NAME AS mdHead
+			 , MNAI.ITEM AS mdBody
+			 , FUNC_GOOD_DOG(P.PET_CD) AS goodDog
+			 , P.NAME AS petName
+			 , TO_CHAR(P.BIRTH, 'YYYY-MM-DD') AS petBirthday
+			 , GT.TYPE AS petGender
+			 , TO_CHAR(P.NEUTRAL_DATE, 'YYYY-MM-DD') AS neutralDate
+			 , DI.NAME AS dogType
+			 , FUN_PET_WEIGHT(P.PET_CD) AS weight
+		FROM TBL_WALK W JOIN TBL_WALK_INFO WI
+		ON W.WALK_CD = WI.WALK_CD
+		JOIN TBL_WALK_PET_SEL WPS
+		ON W.WALK_CD = WPS.WALK_CD
+		JOIN TBL_PET P
+		ON WPS.PET_CD = P.PET_CD
+		JOIN TBL_DOG_ITEM DI
+		ON P.DOG_ITEM_CD = DI.DOG_ITEM_CD
+		JOIN TBL_GENDER_TYPE GT
+		ON P.GENDER_TYPE_CD = GT.GENDER_TYPE_CD
+		LEFT JOIN TBL_MEDAL_GET MG
+		ON P.PET_CD = MG.PET_CD
+		LEFT JOIN TBL_MEDAL_NAME_ITEM MNAI
+		ON MG.MD_NAME_ITEM_CD = MNAI.MD_NAME_ITEM_CD
+		LEFT JOIN TBL_MEDAL_NUM_ITEM MNUI
+		ON MG.MD_NUM_ITEM_CD = MNUI.MD_NUM_ITEM_CD
+		WHERE W.WALK_CD = #{walkCd}
+		AND (MG.MD_TYPE_CD = 'MNAI1'
+		OR MG.MD_TYPE_CD IS NULL)
+	</select>
+	
+	<!-- 강아지 장애리스트 -->
+	<select id="walkDetailPetDisable" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT D.DISA_CD AS disaCd
+			 , P.NAME petName
+			 , D.NAME AS disaName
+		FROM TBL_WALK W JOIN TBL_WALK_PET_SEL WPS
+		ON W.WALK_CD = WPS.WALK_CD
+		JOIN TBL_PET P
+		ON WPS.PET_CD = P.PET_CD
+		JOIN TBL_DISA D
+		ON P.PET_CD = D.PET_CD
+		WHERE W.WALK_CD = #{walkCd}
+	</select>
+	
+	<!-- 강아지 알러지리스트 -->
+	<select id="walkDetailPetAllerge" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT A.ALLERGE_CD AS alleCd
+			 , P.NAME petName
+			 , A.NAME AS alleName
+		FROM TBL_WALK W JOIN TBL_WALK_PET_SEL WPS
+		ON W.WALK_CD = WPS.WALK_CD
+		JOIN TBL_PET P 
+		ON WPS.PET_CD = P.PET_CD
+		JOIN TBL_ALLERGE A
+		ON P.PET_CD = A.PET_CD
+		WHERE W.WALK_CD = #{walkCd}
+	</select>
+	
+	<!-- 산책 피드백 항목별 점수 -->
+	<select id="walkDetailOwnFdbItem" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT OFI.ITEM AS itemName
+			 , TRUNC(SUM(OFD.SCORE) / COUNT(*), 1) AS itemScore
+        FROM TBL_WALK W JOIN TBL_OWN O
+        ON W.OWN_CD = O.OWN_CD
+        JOIN TBL_OWN_FDB OFD 
+        ON O.OWN_CD = OFD.OWN_CD 
+        JOIN TBL_OWN_FDB_ITEM OFI
+        ON OFD.OWN_FDB_ITEM_CD = OFI.OWN_FDB_ITEM_CD
+        WHERE W.WALK_CD = #{walkCd}
+        GROUP BY OFI.ITEM
+	</select>
+
+	<select id="walkPetSel" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT P.PET_CD AS petCd, P.NAME as petName, GT.TYPE as petGender, TO_CHAR(P.NEUTRAL_DATE, 'YYYY-MM-DD') as neutralDate, TRUNC((SYSDATE - P.BIRTH) / 365) as petAge, FUN_PET_WEIGHT(P.PET_CD) as weight
+		FROM TBL_USER U JOIN TBL_OWN O
+		ON U.USER_CD = O.USER_CD
+		JOIN TBL_PET P
+		ON O.OWN_CD = P.OWN_CD
+		JOIN TBL_GENDER_TYPE GT
+		ON P.GENDER_TYPE_CD = GT.GENDER_TYPE_CD
+		LEFT JOIN TBL_PET_BYE PB
+		ON P.PET_CD = PB.PET_CD
+		WHERE U.USER_CD = #{code}
+		AND PB.INS_DATE IS NULL
+		UNION
+		SELECT P.PET_CD AS petCd, P.NAME as petName, GT.TYPE as petGender, TO_CHAR(P.NEUTRAL_DATE, 'YYYY-MM-DD') as neutralDate, TRUNC((SYSDATE - P.BIRTH) / 365) as petAge, FUN_PET_WEIGHT(P.PET_CD) as weight
+		FROM TBL_USER U JOIN TBL_OWN O
+		ON U.USER_CD = O.USER_CD
+		JOIN TBL_SHARE_PET SP
+		ON O.OWN_CD = SP.OWN_CD
+		JOIN TBL_PET P
+		ON SP.PET_CD = P.PET_CD
+		JOIN TBL_GENDER_TYPE GT
+		ON P.GENDER_TYPE_CD = GT.GENDER_TYPE_CD
+		LEFT JOIN TBL_PET_BYE PB
+		ON P.PET_CD = PB.PET_CD
+		WHERE U.USER_CD = #{code}
+		AND PB.INS_DATE IS NULL
+	</select>
+	
+	<!-- 2차 추천 리스트 -->
+	<select id="walkList2" parameterType="com.togedog.vo.ParamDTO" resultType="com.togedog.vo.MatchingDTO">
+		SELECT WALK_CD as walkCd
+		     , NICKNAME as nickName
+		     , AGE as age
+		     , ASD as addr1
+		     , ASGG as addr2
+		     , ADEM as addr3
+		     , ADDRESS as addrDetail
+		     , WALK_DATE as walkDate
+		     , START_TIME as startTime
+		     , END_TIME as endTime
+		     , PET_NAME as petName
+		     , PET_SIZE as petSize
+		     , NEUTRAL_DATE as neutralDate
+		     , PETCOUNT as petCount
+		     , TO_CHAR(FUN_WALK_DATE(OWN_CD), 'YYYY-MM-DD') as lastWalk
+		FROM VIEW_WALK_2
+		WHERE USER_CD != #{code}
+		<if test="filter != ''">
+			AND AGE
+			
+			<if test="filter lt '70'">
+				=
+			</if>
+			<if test="filter == '70'">
+			<![CDATA[
+				>=
+			]]>
+			</if>
+				
+			#{filter}
+		</if>
+		
+		<if test="order != ''">
+			ORDER BY 
+			
+			<if test="order == 'NICKNAME'">
+				NICKNAME
+			</if>
+			<if test="order == 'WALK_DATE'">
+				WALK_DATE
+			</if>
+			<if test="order == 'LAST_WALK'">
+				LAST_WALK
+			</if>
+			<if test="order == 'PET_COUNT'">
+				PET_COUNT
+			</if>
+			
+			<if test="by == 'ASC'">
+				ASC
+			</if>
+			<if test="by == 'DESC'">
+				DESC
+			</if>
+		</if>
+	</select>
+	
+	<select id="getOwn" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT O.OWN_CD AS ownCd, TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) - TO_NUMBER(TO_CHAR(UD.BIRTHDAY, 'YYYY')) AS age, O.INTR_ITEM_CD as intrCd, GRADE(O.OWN_CD) as gradeCd
+		FROM TBL_USER U JOIN TBL_USER_DATA UD
+		ON U.USER_CD = UD.USER_CD
+		JOIN TBL_OWN O
+		ON U.USER_CD = O.USER_CD
+		WHERE U.USER_CD = #{code}
+	</select>
+	
+	<select id="getPet" parameterType="java.lang.String" resultType="com.togedog.vo.MatchingDTO">
+		SELECT GENDER_TYPE_CD AS petGender, FUN_PET_WEIGHT(PET_CD) AS weight, TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')) - TO_NUMBER(TO_CHAR(BIRTH, 'YYYY')) AS petAge
+		FROM TBL_PET
+		WHERE PET_CD = #{petCd}
+	</select>
+	
+	<select id="matchOwnInsert" parameterType="com.togedog.vo.MatchingDTO" statementType="CALLABLE">
+		{
+			CALL PRC_WALK_INSERT
+			(
+				 #{ownCd},
+				 #{addrCd3},
+				 #{addrDetail},
+				 #{walkDate},
+				 #{startTime},
+				 #{endTime},
+				 
+				 #{walkCd, mode=OUT, jdbcType=VARCHAR}
+			)
+		}
+	</select>
+	
+	<select id="matchPetInsert" parameterType="com.togedog.vo.ParamDTO" statementType="CALLABLE">
+		{
+			CALL PRC_WALK_PET_SEL_INSERT
+			(
+				#{walkCd},
+				#{petCd},
+				#{petRepCd}
+			)
+		}
+	</select>
+	
+	<select id="matchingSel" parameterType="com.togedog.vo.ParamDTO" statementType="CALLABLE">
+		{
+			CALL PRC_WALK_SEL
+			(
+				#{walkCd},
+				#{code},
+				#{walkCd2, mode=OUT, jdbcType=VARCHAR}
+			)
+		}
+	</select>
+	
+	<select id="getAgcPrice" resultType="com.togedog.vo.ParamDTO">
+		SELECT ITEM AS ITEM, PRICE AS PRICE
+		FROM TBL_AGC_PRICE
+	</select>
+	
+	<select id="getPetSize" resultType="com.togedog.vo.ParamDTO">
+		SELECT ITEM AS ITEM, STAN_WEIGHT AS WEIGHT
+		FROM TBL_SIZE_STAN
+	</select>
+	
+	<select id="getBasePrice" resultType="com.togedog.vo.ParamDTO">
+		SELECT ITEM AS ITEM, PRICE AS PRICE
+		FROM TBL_AGC_PRICE
+		WHERE ITEM LIKE '%분%'
+		ORDER BY ITEM
+	</select>
+	
+	<select id="getSubPrice" resultType="com.togedog.vo.ParamDTO">
+		SELECT ITEM AS ITEM, PRICE AS PRICE
+		FROM TBL_AGC_PRICE
+		WHERE ITEM LIKE '%형%'
+	</select>
+	
+	<select id="agcInsert" parameterType="com.togedog.vo.MatchingDTO" statementType="CALLABLE">
+		{
+			CALL PRC_AGC_APPLY_INSERT
+			(
+				 #{ownCd},
+				 #{addrCd3},
+				 #{addrDetail},
+				 #{walkDate},
+				 #{startTime},
+				 #{endTime},
+				 
+				 #{agcCd, mode=OUT, jdbcType=VARCHAR}
+			)
+		}
+	</select>
+	
+	<select id="agcPetInsert" parameterType="com.togedog.vo.ParamDTO" statementType="CALLABLE">
+		{
+			CALL PRC_AGC_PET_INSERT2
+			(
+				#{agcCd},
+				#{petCd},
+				#{petRepCd}
+			)
+		}
+	</select>
+	
+	
+	<!-- 금액 계산 -->
+	
+</mapper>
